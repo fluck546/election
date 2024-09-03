@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facial Recognition Login</title>
+</head>
+<body>
+    <h1>Login using Face Recognition</h1>
+
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="capture">Capture Photo</button>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+
+    <form id="login-form" method="POST" action="{% url 'facial_login' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="image" id="image">
+        <button type="submit">Login with Face</button>
+    </form>
+
+    <script>
+        // Access the camera
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            });
+
+        // Capture the image when the user clicks the "Capture" button
+        document.getElementById('capture').addEventListener('click', function() {
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, 640, 480);
+
+            // Convert the image to a data URL and store it in the hidden input field
+            const dataURL = canvas.toDataURL('image/png');
+            document.getElementById('image').value = dataURL;
+        });
+    </script>
+    {% if error %}
+    <div class="error-message">  {{ error }}
+    </div>
+    {% endif %}
+</body>
+</html>

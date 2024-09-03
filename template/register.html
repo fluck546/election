@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register with Face Recognition</title>
+</head>
+<body>
+    <h1>Register with Face Recognition</h1>
+
+    <!-- Form to capture username, password, and facial data -->
+    <form id="register-form" method="POST" action="{% url 'register' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+
+        <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+
+        <div>
+            <label for="password1">Password:</label>
+            <input type="password" id="password1" name="password1" required>
+        </div>
+
+        <div>
+            <label for="password2">Confirm Password:</label>
+            <input type="password" id="password2" name="password2" required>
+        </div>
+
+        <h2>Capture Your Face</h2>
+        <video id="video" width="640" height="480" autoplay></video>
+        <button type="button" id="capture">Capture Photo</button>
+        <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+
+        <!-- Hidden field to store the captured image data -->
+        <input type="hidden" name="image" id="image">
+
+        <button type="submit">Register</button>
+    </form>
+
+    <script>
+        // Access the camera
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing webcam: " + err);
+            });
+
+        // Capture the image when the user clicks the "Capture" button
+        document.getElementById('capture').addEventListener('click', function() {
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, 640, 480);
+
+            // Convert the image to a data URL and store it in the hidden input field
+            const dataURL = canvas.toDataURL('image/png');
+            document.getElementById('image').value = dataURL;
+            alert("Photo captured successfully!");
+        });
+    </script>
+
+    {% if error %}
+        <div class="error-message">  {{ error }}
+        </div>
+    {% endif %}
+</body>
+</html>

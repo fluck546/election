@@ -1,0 +1,31 @@
+<!-- election_app/templates/election_app/vote.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vote for {{ election_round.name }}</title>
+</head>
+<body>
+    <h1>Vote for {{ election_round.name }}</h1>
+
+    <!-- Display messages -->
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <!-- If the user has already voted, show a message, else show the form -->
+    {% if has_voted %}
+        <p style="color: red;">You have already voted in this election round.</p>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Vote</button>
+        </form>
+    {% endif %}
+</body>
+</html>

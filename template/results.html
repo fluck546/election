@@ -1,0 +1,16 @@
+<!-- election_app/templates/election_app/results.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Results</title>
+</head>
+<body>
+    <h1>Results for {{ election_round.name }}</h1>
+    <ul>
+        {% for result in results %}
+            <li>{{ result.candidate.name }}: {{ result.votes }} votes</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!-- election_app/templates/election_app/admin.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+</head>
+<body>
+    <h1>Admin Panel</h1>
+    <h2>Add New Election Round</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Round</button>
+    </form>
+    <h2>Election Rounds</h2>
+    <ul>
+        {% for round in rounds %}
+            <li>{{ round.name }} - Active: {{ round.is_active }} - From: {{ round.start_date }} To: {{ round.end_date }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
