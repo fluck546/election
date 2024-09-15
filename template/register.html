@@ -3,73 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Register with Face Recognition</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Register with Face Recognition</h1>
+<body class="bg-gray-100">
 
-    <!-- Form to capture username, password, and facial data -->
-    <form id="register-form" method="POST" action="{% url 'register' %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
+<div class="container mx-auto flex justify-center items-center min-h-screen">
+    <div class="bg-white shadow-lg p-6 w-full max-w-lg rounded">
+        <h1 class="text-center text-2xl font-bold mb-6">Register with Face Recognition</h1>
+
+        <!-- Error message display -->
+        {% if error %}
+        <div class="bg-red-500 text-white text-center py-2 rounded mb-6">
+            {{ error }}
         </div>
+        {% endif %}
 
-        <div>
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-        </div>
+        <!-- Form to capture sid and facial data -->
+        <form id="register-form" method="POST" action="{% url 'register' %}" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
 
-        <div>
-            <label for="password1">Password:</label>
-            <input type="password" id="password1" name="password1" required>
-        </div>
+            <!-- SID (Username) Field -->
+            <div>
+                <label for="sid" class="block text-gray-700 font-medium">Sid:</label>
+                <input type="text" id="sid" name="sid" class="bg-blue-100 border border-gray-300 text-gray-900 rounded-lg py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+            </div>
 
-        <div>
-            <label for="password2">Confirm Password:</label>
-            <input type="password" id="password2" name="password2" required>
-        </div>
+            <!-- Capture Your Face -->
+            <h2 class="text-center text-lg font-semibold">Capture Your Face</h2>
+            <div class="flex justify-center mb-3">
+                <video id="video" class="border rounded" width="320" height="240" autoplay></video>
+            </div>
+            <div class="flex justify-center">
+                <button type="button" id="capture" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Capture Photo</button>
+            </div>
+            <canvas id="canvas" width="320" height="240" class="hidden"></canvas>
 
-        <h2>Capture Your Face</h2>
-        <video id="video" width="640" height="480" autoplay></video>
-        <button type="button" id="capture">Capture Photo</button>
-        <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+            <!-- Hidden field to store the captured image -->
+            <input type="hidden" name="image" id="image">
 
-        <!-- Hidden field to store the captured image data -->
-        <input type="hidden" name="image" id="image">
+            <!-- Register Button -->
+            <div class="flex justify-center">
+                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded w-full max-w-xs">Register</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        <button type="submit">Register</button>
-    </form>
-
-    <script>
-        // Access the camera
-        const video = document.getElementById('video');
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                video.srcObject = stream;
-            })
-            .catch(err => {
-                console.error("Error accessing webcam: " + err);
-            });
-
-        // Capture the image when the user clicks the "Capture" button
-        document.getElementById('capture').addEventListener('click', function() {
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, 640, 480);
-
-            // Convert the image to a data URL and store it in the hidden input field
-            const dataURL = canvas.toDataURL('image/png');
-            document.getElementById('image').value = dataURL;
-            alert("Photo captured successfully!");
+<script>
+    const video = document.getElementById('video');
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            video.srcObject = stream;
+        })
+        .catch(err => {
+            console.error("Error accessing webcam: " + err);
         });
-    </script>
 
-    {% if error %}
-        <div class="error-message">  {{ error }}
-        </div>
-    {% endif %}
+    // Capture the image and save it as a base64 string in the hidden input
+    document.getElementById('capture').addEventListener('click', function() {
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, 320, 240);
+        const dataURL = canvas.toDataURL('image/png');
+        document.getElementById('image').value = dataURL;
+        alert("Photo captured successfully!");
+    });
+</script>
+
 </body>
 </html>

@@ -1,129 +1,138 @@
 import face_recognition
 import base64
-from django.core.files.base import ContentFile
-from django.contrib.auth import login
 from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from .form import UserRegistrationForm
-from .models import UserProfile
-from django.db import transaction, IntegrityError
+from django.contrib.auth import login
+from .models import CustomUser
+import random
+import string
+from io import BytesIO
+from PIL import Image
 import numpy as np
-from django.contrib import messages
-from django.db.models.signals import post_save
-from .signal import create_or_update_user_profile  # Import your signal handler
 import json
-import binascii
+from django.contrib.auth.decorators import user_passes_test
 
-def register_user(request):
-    form = UserRegistrationForm(request.POST or None)
-    if request.method == 'POST':
-        if form.is_valid():
-            image_data = request.POST.get('image')
-            if image_data:
-                try:
-                    format, imgstr = image_data.split(';base64,')
-                    ext = format.split('/')[-1]
-                    image = ContentFile(base64.b64decode(imgstr), name=f'temp.{ext}')
 
-                    # Load image and extract face encoding
-                    face_image = face_recognition.load_image_file(image)
-                    face_encoding = face_recognition.face_encodings(face_image)
+def staff_required(view_func):
+    decorated_view_func = user_passes_test(lambda u: u.is_staff)(view_func)
+    return decorated_view_func
 
-                    if len(face_encoding) > 0:
-                        with transaction.atomic():
-                            face_encoding = face_encoding[0]
-                            print("Extracted face encoding:", face_encoding)
 
-                            # Temporarily disconnect the post_save signal
-                            post_save.disconnect(create_or_update_user_profile, sender=User)
+def generate_random_password():
+    """Generate a random password for the user."""
+    return "".join(random.choices(string.ascii_letters + string.digits, k=12))
 
-                            # Create the User object
-                            user = form.save()
 
-                            # Now create the UserProfile
-                            profile = UserProfile.objects.create(user=user, username=user.username, face_encoding=face_encoding.tobytes())
+@staff_required
+def register(request):
+    if request.method == "POST":
+        sid = request.POST.get("sid")
+        captured_image_base64 = request.POST.get("image")
 
-                            # Reconnect the signal
-                            post_save.connect(create_or_update_user_profile, sender=User)
+        # Check if the SID already exists
+        if CustomUser.objects.filter(sid=sid).exists():
+            return render(
+                request,
+                "register.html",
+                {"error": "Sid already exists. Please choose a different Sid."},
+            )
 
-                        # Automatically log in the user and redirect
-                        login(request, user)
-                        messages.success(request, "Registration successful! You are now logged in.")
-                        return redirect('login')
+        if sid and captured_image_base64:
+            # Create the user with a random password
+            password = generate_random_password()
+            user = CustomUser.objects.create(sid=sid)
+            user.set_password(password)  # Set the random password
+            user.save()
 
-                    else:
-                        print("No face detected in the image.")
-                        return render(request, 'register.html', {'form': form, 'error': 'No face detected. Please try again.'})
+            # Decode the base64 image
+            format, imgstr = captured_image_base64.split(
+                ";base64,"
+            )  # Split the format and data
+            image_data = base64.b64decode(imgstr)
 
-                except (IOError, ValueError) as e:
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.error(f"Error during registration: {e}")
-                    return render(request, 'register.html', {'form': form, 'error': 'An error occurred during registration. Please try again.'})
+            # Convert the image data to an image object using PIL
+            image = Image.open(BytesIO(image_data))
 
+            # Ensure the image is in RGB mode (required by face_recognition)
+            if image.mode != "RGB":
+                image = image.convert("RGB")
+
+            image_np = np.array(
+                image
+            )  # Convert image to a numpy array for face_recognition
+
+            # Extract face encodings using face_recognition
+            face_encodings = face_recognition.face_encodings(image_np)
+
+            if face_encodings:  # Check if any face encodings were detected
+                face_encoding = face_encodings[0].tolist()  # Convert ndarray to list
+                # Save face encoding directly in CustomUser
+                user.set_face_encoding(face_encoding)
+                user.save()
+
+                # Automatically log the user in after registration
+                login(request, user)
+                return redirect("index")
             else:
-                return render(request, 'register.html', {'form': form, 'error': 'Please upload an image.'})
-
+                return render(
+                    request,
+                    "register.html",
+                    {"error": "No face detected in the image. Please try again."},
+                )
         else:
-            return render(request, 'register.html', {'form': form})
+            return render(
+                request,
+                "register.html",
+                {"error": "Please fill in the sid and capture a face."},
+            )
 
-    return render(request, 'register.html', {'form': form})
+    return render(request, "register.html")
 
 
 def facial_login(request):
-    if request.method == 'POST':
-        image_data = request.POST.get('image') 
+    if request.method == "POST":
+        captured_image_base64 = request.POST.get("image")
 
-        if image_data:
-            try:
-                print("Received image data:", image_data[:50])  # Debugging: Print a snippet of the image data
+        if captured_image_base64:
+            # Decode the base64 image
+            format, imgstr = captured_image_base64.split(";base64,")
+            image_data = base64.b64decode(imgstr)
 
-                # Directly split the image_data string 
-                format, imgstr = image_data.split(';base64,')
-                ext = format.split('/')[-1]
+            # Convert the image data to an image object using PIL
+            image = Image.open(BytesIO(image_data))
 
-                try:
-                    image = ContentFile(base64.b64decode(imgstr), name=f'temp.{ext}')
-                except binascii.Error as e:
-                    return render(request, 'facial_login.html', {'error': f'Error decoding image data: {e}'})
+            # Ensure the image is in RGB mode (required by face_recognition)
+            if image.mode != "RGB":
+                image = image.convert("RGB")
 
-                unknown_image = face_recognition.load_image_file(image)
-                print("Loaded unknown image:", unknown_image)  # Debugging: Check if image loaded correctly
+            image_np = np.array(image)  # Convert image to numpy array
 
-                unknown_encoding = face_recognition.face_encodings(unknown_image)
-                print("Unknown encodings:", unknown_encoding)  # Debugging: Check if encodings were extracted
+            # Extract face encoding from the captured image
+            captured_face_encodings = face_recognition.face_encodings(image_np)
 
-                if len(unknown_encoding) > 0:
-                    unknown_encoding = unknown_encoding[0]
+            if captured_face_encodings:
+                captured_face_encoding = captured_face_encodings[0]
 
-                    for user in User.objects.all():
-                        try:
-                            profile = UserProfile.objects.get(user=user) 
-                            known_encoding_bytes = profile.face_encoding
+                # Compare captured face encoding with known face encodings in the database
+                for user in CustomUser.objects.all():
+                    if user.face_encoding:  # Ensure face_encoding is not None
+                        known_face_encoding = json.loads(
+                            user.face_encoding
+                        )  # Load face encoding from JSON
+                        results = face_recognition.compare_faces(
+                            [known_face_encoding], captured_face_encoding
+                        )
 
-                            if known_encoding_bytes:
-                                print("Retrieved face encoding (bytes):", known_encoding_bytes)  # Debugging
-                                print("Size of known_encoding_bytes:", len(known_encoding_bytes))  # Debugging
+                        if results[0]:  # Face match found
+                            login(request, user)  # Log the user in
+                            return redirect(
+                                "index"
+                            )  # Replace 'dashboard' with your desired view name
 
-                                # Explicitly check and convert to bytes if needed
-                                if isinstance(known_encoding_bytes, str):
-                                    known_encoding_bytes = known_encoding_bytes.encode('utf-8')
+        # If no match is found, return an error message
+        return render(
+            request,
+            "facial_login.html",
+            {"error": "Face not recognized. Please try again."},
+        )
 
-                                known_encoding = np.frombuffer(known_encoding_bytes, dtype=np.float64)  
-                                matches = face_recognition.compare_faces([known_encoding], unknown_encoding)
-                                if matches[0]:
-                                    login(request, user)
-                                    return redirect('vote', round_id=4) 
-                        except UserProfile.DoesNotExist:
-                            # Handle the case where UserProfile doesn't exist for this user
-                            print(f"No UserProfile found for user: {user.username}")
-                            continue  
-
-                return render(request, 'facial_login.html', {'error': 'Face not recognized'})
-
-            except ValueError as e:
-                return render(request, 'facial_login.html', {'error': f'Invalid image data: {e}'})
-        else:
-            return render(request, 'facial_login.html', {'error': 'No image data provided'})
-
-    return render(request, 'facial_login.html')
+    return render(request, "facial_login.html")

@@ -12,7 +12,6 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'election_app',
     'faceRecognition',
-    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -88,3 +87,4 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+AUTH_USER_MODEL = 'faceRecognition.CustomUser'

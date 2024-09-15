@@ -3,43 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Facial Recognition Login</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Login using Face Recognition</h1>
+<body class="bg-gray-100">
 
-    <video id="video" width="640" height="480" autoplay></video>
-    <button id="capture">Capture Photo</button>
-    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    <div class="container mx-auto flex flex-col justify-center items-center min-h-screen">
+        <div class="card shadow-lg p-6 bg-white w-full max-w-lg">
+            <h1 class="text-center text-2xl font-bold mb-6">Login using Face Recognition</h1>
 
-    <form id="login-form" method="POST" action="{% url 'facial_login' %}" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="hidden" name="image" id="image">
-        <button type="submit">Login with Face</button>
-    </form>
+            <!-- Video element to display webcam feed -->
+            <div class="flex justify-center mb-6">
+                <video id="video" class="border" width="320" height="240" autoplay></video>
+            </div>
 
+            <!-- Capture Button -->
+            <div class="flex justify-center mb-4">
+                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded w-full max-w-xs" id="capture">Capture Photo</button>
+            </div>
+            
+            <canvas id="canvas" width="320" height="240" class="hidden"></canvas>
+
+            <!-- Login Form -->
+            <form id="login-form" method="POST" action="{% url 'facial_login' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="image" id="image">
+                <div class="flex justify-center mb-4">
+                    <button class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded w-full max-w-xs" type="submit">Login with Face</button>
+                </div>
+            </form>
+
+            <!-- Register Link -->
+            <div class="flex justify-center mb-4">
+                <a href="{% url 'register' %}" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded w-full max-w-xs text-center">Register</a>
+            </div>
+
+            <!-- Error Message -->
+            {% if error %}
+            <div class="alert bg-red-500 text-white text-center py-2 rounded">
+                {{ error }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tailwind JS CDN for interactivity if needed -->
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.js"></script>
+
+    <!-- Camera Script -->
     <script>
         // Access the camera
         const video = document.getElementById('video');
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
                 video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing webcam: " + err);
             });
 
         // Capture the image when the user clicks the "Capture" button
         document.getElementById('capture').addEventListener('click', function() {
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, 640, 480);
+            context.drawImage(video, 0, 0, 320, 240);
 
             // Convert the image to a data URL and store it in the hidden input field
             const dataURL = canvas.toDataURL('image/png');
             document.getElementById('image').value = dataURL;
         });
     </script>
-    {% if error %}
-    <div class="error-message">  {{ error }}
-    </div>
-    {% endif %}
 </body>
 </html>

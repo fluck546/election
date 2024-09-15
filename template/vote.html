@@ -1,31 +1,58 @@
-<!-- election_app/templates/election_app/vote.html -->
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Vote for {{ election_round.name }}</title>
+
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <style>
+        .username {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 16px;
+            color: #333;
+        }
+    </style>
 </head>
-<body>
-    <h1>Vote for {{ election_round.name }}</h1>
+<body class="bg-gray-100">
+    <div class="container mx-auto mt-10">
+        <h1 class="text-center text-2xl font-bold mb-6">Vote for {{ election_round.name }}</h1>
+        <div class="username">Hello, {{ request.CustomUser.name }}!</div>
 
-    <!-- Display messages -->
-    {% if messages %}
-      <ul class="messages">
-        {% for message in messages %}
-          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
+        <!-- Display messages -->
+        {% if messages %}
+        <ul class="messages space-y-2">
+            {% for message in messages %}
+            <li class="bg-{{ message.tags }}-500 text-white py-2 px-4 rounded">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
 
-    <!-- If the user has already voted, show a message, else show the form -->
-    {% if has_voted %}
-        <p style="color: red;">You have already voted in this election round.</p>
-    {% else %}
-        <form method="post">
+        <!-- Voting form or message if already voted -->
+        {% if has_voted %}
+            <p class="text-red-500 text-center">You have already voted in this election round.</p>
+        {% else %}
+        <form method="post" class="flex flex-col items-center">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Vote</button>
+            <div class="mb-4 w-full max-w-md">
+                {{ form.as_p }}
+            </div>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded w-full max-w-md">Vote</button>
         </form>
-    {% endif %}
+        {% endif %}
+
+        <!-- Centered Back to Round Selection Button -->
+        <div class="mt-4 flex justify-center">
+            <a href="{% url 'index' %}" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded w-full max-w-md text-center">Back to Round Selection</a>
+        </div>
+    </div>
+
+    <!-- Tailwind JS CDN for interactivity if needed -->
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.js"></script>
 </body>
 </html>

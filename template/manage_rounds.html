@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Manage Rounds</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <div class="flex">
+      <div class="w-1/4 bg-gray-800 min-h-screen p-6 text-white">
+        <h2 class="text-2xl font-bold mb-6">Admin Dashboard</h2>
+        <nav>
+          <ul class="space-y-4">
+            <li>
+              <a
+                href="{% url 'manage_users' %}"
+                class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded"
+                >Manage Users</a
+              >
+            </li>
+            <li>
+              <a
+                href="{% url 'manage_rounds' %}"
+                class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded"
+                >Manage Rounds</a
+              >
+            </li>
+            <li>
+              <a
+                href="{% url 'manage_candidates' %}"
+                class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded"
+                >Manage Candidates</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="w-3/4 p-10">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h1 class="text-2xl font-bold mb-6">Manage Election Rounds</h1>
+          <button
+            class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+            onclick="openAddRoundModal()"
+          >
+            Add New Round
+          </button>
+
+          <!-- Add Round Modal -->
+          <div
+            id="addRoundModal"
+            class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
+          >
+            <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+              <h2 class="text-xl font-bold mb-4">Add New Round</h2>
+              <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <label for="name" class="block text-gray-700"
+                  >Round Name:</label
+                >
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  class="bg-blue-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                />
+                <label for="start_date" class="block text-gray-700"
+                  >Start Date:</label
+                >
+                <input
+                  type="date"
+                  id="start_date"
+                  name="start_date"
+                  class="bg-blue-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                />
+                <label for="end_date" class="block text-gray-700"
+                  >End Date:</label
+                >
+                <input
+                  type="date"
+                  id="end_date"
+                  name="end_date"
+                  class="bg-blue-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                />
+                <div class="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    id="is_active"
+                    name="is_active"
+                    class="mr-2"
+                  />
+                  <label for="is_active" class="text-gray-700">Is Active</label>
+                </div>
+                <div class="flex justify-between">
+                  <button
+                    type="button"
+                    class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+                    onclick="closeAddRoundModal()"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+                  >
+                    Add Round
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Modal for Editing Rounds -->
+          <div
+            id="editRoundModal"
+            class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
+          >
+            <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+              <h2 class="text-xl font-bold mb-4">Edit Round</h2>
+              <form method="POST" action="" id="editRoundForm">
+                {% csrf_token %}
+                <input type="hidden" id="edit_round_id" name="round_id" />
+                <div class="mb-4">
+                  <label for="edit_name" class="block text-gray-700"
+                    >Round Name:</label
+                  >
+                  <input
+                    type="text"
+                    id="edit_name"
+                    name="name"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="edit_start_date" class="block text-gray-700"
+                    >Start Date:</label
+                  >
+                  <input
+                    type="date"
+                    id="edit_start_date"
+                    name="start_date"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="edit_end_date" class="block text-gray-700"
+                    >End Date:</label
+                  >
+                  <input
+                    type="date"
+                    id="edit_end_date"
+                    name="end_date"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    id="edit_is_active"
+                    name="is_active"
+                    class="mr-2"
+                  />
+                  <label for="edit_is_active" class="text-gray-700"
+                    >Is Active</label
+                  >
+                </div>
+                <div class="flex justify-between">
+                  <button
+                    type="button"
+                    class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+                    onclick="closeEditRoundModal()"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Existing Rounds Table -->
+          <h2 class="text-xl font-semibold mt-10 mb-4">
+            Existing Election Rounds
+          </h2>
+          <div class="overflow-x-auto">
+            <table
+              class="min-w-full bg-white border border-gray-300 rounded-lg"
+            >
+              <thead>
+                <tr
+                  class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal"
+                >
+                  <th class="py-3 px-6 text-left">Name</th>
+                  <th class="py-3 px-6 text-left">Start Date</th>
+                  <th class="py-3 px-6 text-left">End Date</th>
+                  <th class="py-3 px-6 text-left">Active</th>
+                  <th class="py-3 px-6 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for round in rounds %}
+                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                  <td class="py-3 px-6 text-left">{{ round.name }}</td>
+                  <td class="py-3 px-6 text-left">{{ round.start_date }}</td>
+                  <td class="py-3 px-6 text-left">{{ round.end_date }}</td>
+                  <td class="py-3 px-6 text-left">
+                    {{ round.is_active|yesno:"Yes,No" }}
+                  </td>
+                  <td class="py-3 px-6 text-center">
+                    <a
+                      href="#"
+                      class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded"
+                      onclick="openEditRoundModal('{{ round.id }}')"
+                      >Edit</a
+                    >
+                    <a
+                      href="{% url 'delete_round' round.id %}"
+                      class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded ml-2"
+                      >Delete</a
+                    >
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      function openAddRoundModal() {
+        // Reset any previously set values (optional, depends if you want fresh start each time)
+        document.getElementById("name").value = "";
+        document.getElementById("start_date").value = "";
+        document.getElementById("end_date").value = "";
+        document.getElementById("is_active").checked = false;
+
+        // Display the modal by setting the correct CSS class
+        document.getElementById("addRoundModal").classList.remove("hidden");
+      }
+
+      function closeAddRoundModal() {
+        // Hide the modal by adding the hidden class
+        document.getElementById("addRoundModal").classList.add("hidden");
+      }
+
+      function openEditRoundModal(roundId) {
+    fetch(`/get_round_data/${roundId}/`)
+      .then((response) => response.json())
+      .then((data) => {
+        // Wait until the modal is visible
+        const modal = document.getElementById("editRoundModal");
+        modal.classList.remove("hidden");
+        
+        setTimeout(() => {
+            const form = document.getElementById("editRoundForm");
+            if (form) {
+                form.action = `/edit_round/${roundId}/`;
+                document.getElementById("edit_round_id").value = roundId;
+                document.getElementById("edit_name").value = data.name;
+                document.getElementById("edit_start_date").value = data.start_date;
+                document.getElementById("edit_end_date").value = data.end_date;
+                document.getElementById("edit_is_active").checked = data.is_active === "Yes";
+            } else {
+                console.error("Form not found!");
+            }
+        }, 0);  // Adjust timing if needed
+      })
+      .catch((error) => {
+        console.error("Failed to fetch round details: ", error);
+        alert("Failed to fetch round details.");
+      });
+}
+
+
+      function closeEditRoundModal() {
+        // Hide the modal and optionally reset the form fields
+        document.getElementById("editRoundModal").classList.add("hidden");
+        document.getElementById("edit_name").value = "";
+        document.getElementById("edit_start_date").value = "";
+        document.getElementById("edit_end_date").value = "";
+        document.getElementById("edit_is_active").checked = false;
+      }
+    </script>
+  </body>
+</html>

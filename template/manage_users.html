@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Manage Users</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <div class="flex">
+      <div class="w-1/4 bg-gray-800 min-h-screen p-6 text-white">
+        <!-- Sidebar content -->
+        <h2 class="text-2xl font-bold mb-6">Admin Dashboard</h2>
+        <nav>
+          <ul class="space-y-4">
+            <li>
+              <a
+                href="{% url 'manage_users' %}"
+                class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded"
+                >Manage Users</a
+              >
+            </li>
+            <li>
+              <a
+                href="{% url 'manage_rounds' %}"
+                class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded"
+                >Manage Rounds</a
+              >
+            </li>
+            <li>
+              <a
+                href="{% url 'manage_candidates' %}"
+                class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded"
+                >Manage Candidates</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+      <div class="w-3/4 p-10">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h1 class="text-2xl font-bold mb-6">Manage Users</h1>
+          <button
+            onclick="openAddUserModal()"
+            class="mb-4 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+          >
+            Add New User
+          </button>
+          <div class="overflow-x-auto">
+            <table
+              class="min-w-full bg-white border border-gray-300 rounded-lg"
+            >
+              <thead
+                class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal"
+              >
+                <tr>
+                  <th class="py-3 px-6 text-left">SID</th>
+                  <th class="py-3 px-6 text-left">Name</th>
+                  <th class="py-3 px-6 text-left">Branch</th>
+                  <th class="py-3 px-6 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="text-gray-700 text-sm font-light">
+                {% for user in users %}
+                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                  <td class="py-3 px-6">{{ user.sid }}</td>
+                  <td class="py-3 px-6">
+                    {{ user.name }} {{ user.last_name }}
+                  </td>
+                  <td class="py-3 px-6">{{ user.branch }}</td>
+                  <td class="py-3 px-6 text-center">
+                    <button
+                      onclick="openEditUserModal('{{ user.id }}', '{{ user.sid }}', '{{ user.name }}', '{{ user.last_name }}', '{{ user.branch }}')"
+                      class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded"
+                    >
+                      Edit
+                    </button>
+                    <a
+                      href="{% url 'delete_user' user.id %}"
+                      class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded ml-2"
+                      >Delete</a
+                    >
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div
+      id="addUserModal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
+    >
+      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+        <h2 class="text-xl font-bold mb-4">Add New User</h2>
+        <form method="POST" action="{% url 'add_user' %}">
+          {% csrf_token %}
+          <!-- Input fields for adding a user -->
+          <div class="mb-4">
+            <label for="sid" class="block text-gray-700">SID:</label>
+            <input
+              type="text"
+              id="sid"
+              name="sid"
+              class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="name" class="block text-gray-700">Name:</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="last_name" class="block text-gray-700"
+              >Last Name:</label
+            >
+            <input
+              type="text"
+              id="last_name"
+              name="last_name"
+              class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="branch" class="block text-gray-700">Branch:</label>
+            <input
+              type="text"
+              id="branch"
+              name="branch"
+              class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+            />
+          </div>
+          <div class="flex justify-between">
+            <button
+              type="button"
+              class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+              onclick="closeAddUserModal()"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+            >
+              Add User
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div
+      id="editUserModal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
+    >
+      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+        <h2 class="text-xl font-bold mb-4">Edit User</h2>
+        <form id="editUserForm" method="POST">
+          {% csrf_token %}
+          <input type="hidden" id="edit_user_id" name="user_id" />
+          <div class="mb-4">
+            <label for="edit_sid" class="block text-gray-700">SID:</label>
+            <input
+              type="text"
+              id="edit_sid"
+              name="sid"
+              class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="edit_name" class="block text-gray-700">Name:</label>
+            <input
+              type="text"
+              id="edit_name"
+              name="name"
+              class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="edit_last_name" class="block text-gray-700"
+              >Last Name:</label
+            >
+            <input
+              type="text"
+              id="edit_last_name"
+              name="last_name"
+              class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="edit_branch" class="block text-gray-700">Branch:</label>
+            <input
+              type="text"
+              id="edit_branch"
+              name="branch"
+              class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+            />
+          </div>
+          <div class="flex justify-between">
+            <button
+              type="button"
+              class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+              onclick="closeEditUserModal()"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      function openAddUserModal() {
+        document.getElementById("addUserModal").classList.remove("hidden");
+      }
+      function closeAddUserModal() {
+        document.getElementById("addUserModal").classList.add("hidden");
+      }
+      function openEditUserModal(userId, sid, name, last_name, branch) {
+        // Set user-specific form values
+        document.getElementById("edit_user_id").value = userId;
+        document.getElementById("edit_sid").value = sid;
+        document.getElementById("edit_name").value = name;
+        document.getElementById("edit_last_name").value = last_name;
+        document.getElementById("edit_branch").value = branch;
+
+        // Set form action with the correct user ID
+        document.getElementById(
+          "editUserForm"
+        ).action = `/edit_user/${userId}/`;
+
+        // Show the modal
+        document.getElementById("editUserModal").classList.remove("hidden");
+      }
+
+      function closeEditUserModal() {
+        document.getElementById("editUserModal").classList.add("hidden");
+      }
+    </script>
+  </body>
+</html>

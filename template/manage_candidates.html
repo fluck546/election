@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Manage Candidates</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <!-- Container for Sidebar and Content -->
+    <div class="flex">
+      <!-- Sidebar -->
+      <div class="w-1/4 bg-gray-800 min-h-screen p-6 text-white">
+        <h2 class="text-2xl font-bold mb-6">Admin Dashboard</h2>
+        <nav>
+          <ul class="space-y-4">
+            <li>
+              <a
+                href="{% url 'manage_users' %}"
+                class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded"
+                >Manage Users</a
+              >
+            </li>
+            <li>
+              <a
+                href="{% url 'manage_rounds' %}"
+                class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded"
+                >Manage Rounds</a
+              >
+            </li>
+            <li>
+              <a
+                href="{% url 'manage_candidates' %}"
+                class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded"
+                >Manage Candidates</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="w-3/4 p-10">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h1 class="text-2xl font-bold mb-6">Manage Candidates</h1>
+
+          <!-- Add Candidate Modal -->
+          <button
+            onclick="openAddCandidateModal()"
+            class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded mb-4"
+          >
+            Add New Candidate
+          </button>
+
+          <div
+            id="addCandidateModal"
+            class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
+          >
+            <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+              <h2 class="text-xl font-bold mb-4">Add New Candidate</h2>
+              <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <div class="mb-4">
+                  <label for="name" class="block text-gray-700"
+                    >Candidate Name:</label
+                  >
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="election_round" class="block text-gray-700"
+                    >Election Round:</label
+                  >
+                  <select
+                    id="election_round"
+                    name="election_round"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  >
+                    {% for round in election_rounds %}
+                    <option value="{{ round.id }}">{{ round.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="mb-4">
+                  <label for="last_name" class="block text-gray-700"
+                    >Last Name:</label
+                  >
+                  <input
+                    type="text"
+                    id="last_name"
+                    name="last_name"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="detail" class="block text-gray-700"
+                    >Detail:</label
+                  >
+                  <textarea
+                    id="detail"
+                    name="detail"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  ></textarea>
+                </div>
+                <div class="mb-4">
+                  <label for="branch" class="block text-gray-700"
+                    >Branch:</label
+                  >
+                  <input
+                    type="text"
+                    id="branch"
+                    name="branch"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="year" class="block text-gray-700">Year:</label>
+                  <input
+                    type="number"
+                    id="year"
+                    name="year"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="flex justify-between">
+                  <button
+                    type="button"
+                    class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+                    onclick="closeAddCandidateModal()"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+                  >
+                    Add Candidate
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- Edit Candidate Modal -->
+          <div
+            id="editCandidateModal"
+            class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
+          >
+            <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+              <h2 class="text-xl font-bold mb-4">Edit Candidate</h2>
+              <form id="editCandidateForm" method="POST" action="">
+                {% csrf_token %}
+                <input
+                  type="hidden"
+                  id="edit_candidate_id"
+                  name="candidate_id"
+                />
+                <div class="mb-4">
+                  <label for="edit_name" class="block text-gray-700"
+                    >Candidate Name:</label
+                  >
+                  <input
+                    type="text"
+                    id="edit_name"
+                    name="name"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="edit_round" class="block text-gray-700"
+                    >Election Round:</label
+                  >
+                  <select
+                    id="edit_election_round"
+                    name="election_round"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  >
+                    <!-- Options will be dynamically loaded here -->
+                  </select>
+                </div>
+                <div class="mb-4">
+                  <label for="last_name" class="block text-gray-700"
+                    >Last Name:</label
+                  >
+                  <input
+                    type="text"
+                    id="edit_last_name"
+                    name="last_name"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="detail" class="block text-gray-700"
+                    >Detail:</label
+                  >
+                  <textarea
+                    id="edit_detail"
+                    name="detail"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  ></textarea>
+                </div>
+                <div class="mb-4">
+                  <label for="branch" class="block text-gray-700"
+                    >Branch:</label
+                  >
+                  <input
+                    type="text"
+                    id="edit_branch"
+                    name="branch"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="year" class="block text-gray-700">Year:</label>
+                  <input
+                    type="number"
+                    id="edit_year"
+                    name="year"
+                    class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+                  />
+                </div>
+                <div class="flex justify-between">
+                  <button
+                    type="button"
+                    class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
+                    onclick="closeEditCandidateModal()"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Table for Existing Candidates -->
+          <h2 class="text-xl font-semibold mt-4 mb-4">Existing Candidates</h2>
+          <div class="overflow-x-auto">
+            <table
+              class="min-w-full bg-white border border-gray-300 rounded-lg"
+            >
+              <thead>
+                <tr
+                  class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal"
+                >
+                  <th class="py-3 px-6 text-left">Candidate Name</th>
+                  <th class="py-3 px-6 text-left">Last Name</th>
+                  <th class="py-3 px-6 text-left">Detail</th>
+                  <th class="py-3 px-6 text-left">Branch</th>
+                  <th class="py-3 px-6 text-left">Year</th>
+                  <th class="py-3 px-6 text-left">Election Round</th>
+                  <th class="py-3 px-6 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="text-gray-700 text-sm font-light">
+                {% for candidate in candidates %}
+                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                  <td class="py-3 px-6 text-left">{{ candidate.name }}</td>
+                  <td class="py-3 px-6 text-left">{{ candidate.last_name }}</td>
+                  <td class="py-3 px-6 text-left">{{ candidate.detail }}</td>
+                  <td class="py-3 px-6 text-left">{{ candidate.branch }}</td>
+                  <td class="py-3 px-6 text-left">{{ candidate.year }}</td>
+                  <td class="py-3 px-6 text-left">
+                    {{ candidate.election_round.name }}
+                  </td>
+                  <td class="py-3 px-6 text-center">
+                    <button
+                      onclick="openEditCandidateModal('{{ candidate.id }}', '{{ candidate.name }}', '{{ candidate.election_round.id }}')"
+                      class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded"
+                    >
+                      Edit
+                    </button>
+                    <a
+                      href="{% url 'delete_candidate' candidate.id %}"
+                      class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded ml-2"
+                      >Delete</a
+                    >
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function openAddCandidateModal() {
+        document.getElementById("addCandidateModal").classList.remove("hidden");
+      }
+      function closeAddCandidateModal() {
+        document.getElementById("addCandidateModal").classList.add("hidden");
+      }
+      function openEditCandidateModal(candidateId) {
+        const form = document.getElementById("editCandidateForm");
+
+        if (!form) {
+          console.error("Form element is missing");
+          alert("Form element is missing.");
+          return;
+        }
+
+        fetch(`/get_candidate_data/${candidateId}/`)
+          .then((response) => response.json())
+          .then((data) => {
+            const fields = {
+              edit_name: "name",
+              edit_last_name: "last_name",
+              edit_detail: "detail",
+              edit_branch: "branch",
+              edit_year: "year",
+              edit_election_round: "election_round_id", // This needs to handle IDs differently but is included for completeness
+            };
+
+            Object.keys(fields).forEach((id) => {
+              const element = document.getElementById(id);
+              if (!element) {
+                throw new Error(`Form element with ID ${id} is missing`);
+              }
+              if (id === "edit_election_round") {
+                // This should handle the dropdown population
+                populateElectionRoundsDropdown([data.election_round_id]); // Simplified for example
+              } else {
+                element.value = data[fields[id]];
+              }
+            });
+
+            document
+              .getElementById("editCandidateModal")
+              .classList.remove("hidden");
+          })
+          .catch((error) => {
+            console.error(
+              "Failed to fetch and populate candidate data:",
+              error
+            );
+            alert("Failed to fetch candidate details: " + error.message);
+          });
+      }
+
+      function fetchElectionRounds() {
+        return fetch("/get_election_rounds/")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Failed to fetch election rounds");
+            }
+            return response.json();
+          })
+          .then((data) => data.election_rounds)
+          .catch((error) => {
+            console.error("Failed to fetch election rounds:", error);
+            return []; // Return an empty array in case of error
+          });
+      }
+
+      function populateElectionRoundsDropdown(electionRounds, selectedRoundId) {
+        const electionRoundSelect = document.getElementById(
+          "edit_election_round"
+        );
+        electionRounds.forEach((round) => {
+          const option = document.createElement("option");
+          option.value = round.id;
+          option.text = round.name;
+          electionRoundSelect.appendChild(option);
+          if (round.id === selectedRoundId) {
+            electionRoundSelect.value = round.id; // Set selected value
+          }
+        });
+      }
+
+      function closeEditCandidateModal() {
+        document.getElementById("editCandidateModal").classList.add("hidden");
+        // Optionally clear or reset form fields here
+      }
+    </script>
+  </body>
+</html>

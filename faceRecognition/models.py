@@ -1,19 +1,72 @@
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    PermissionsMixin,
+    BaseUserManager,
+)
 from django.db import models
-from django.contrib.auth.models import User
-import numpy as np
+import json
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)  # Keep the default OneToOneField relationship
-    username = models.CharField(max_length=150, unique=True, default='default_user')  # Store username as a separate field
-    face_encoding = models.BinaryField(blank=True) 
+
+class CustomUserManager(BaseUserManager):
+    def create_user(self, sid, password=None, **extra_fields):
+        if not sid:
+            raise ValueError("The Sid field must be set")
+        user = self.model(sid=sid, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, sid, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
+
+        return self.create_user(sid, password, **extra_fields)
+
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    sid = models.CharField(max_length=255, unique=True)
+    face_encoding = models.TextField(
+        blank=True, null=True, unique=True
+    )  # Store face encoding as text
+    name = models.CharField(max_length=255, blank=True, null=True)
+    last_name = models.CharField(max_length=255, blank=True, null=True)
+    branch = models.CharField(max_length=255, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = CustomUserManager()
+
+    USERNAME_FIELD = "sid"
+    REQUIRED_FIELDS = []
+
+    groups = models.ManyToManyField(
+        "auth.Group",
+        related_name="customuser_set",  
+        blank=True,
+    )
+    user_permissions = models.ManyToManyField(
+        "auth.Permission",
+        related_name="customuser_permissions_set",  # Avoid conflict with auth.User
+        blank=True,
+    )
 
     def __str__(self):
-        return self.username 
+        return self.sid
 
     def set_face_encoding(self, encoding):
-        self.face_encoding = encoding.tobytes()
+        """Store face encoding as JSON string."""
+        self.face_encoding = json.dumps(encoding)
 
     def get_face_encoding(self):
+        """Retrieve face encoding as a Python list."""
         if self.face_encoding:
-            return np.frombuffer(self.face_encoding, dtype=np.float64)
+            return json.loads(self.face_encoding)
         return None
