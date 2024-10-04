@@ -1,10 +1,11 @@
 from django.db import models
-from django.contrib.auth.models import User
+
 from django.conf import settings
+from faceRecognition.models import User
 
 
 class ElectionRound(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=100)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     is_active = models.BooleanField(default=True)
@@ -15,10 +16,10 @@ class ElectionRound(models.Model):
 
 class Candidate(models.Model):
     number = models.CharField(max_length=10, blank=True, null=True)
-    name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255, blank=True, null=True)
+    name = models.CharField(max_length=40)
+    last_name = models.CharField(max_length=40, blank=True, null=True)
     detail = models.TextField(blank=True, null=True)
-    branch = models.CharField(max_length=100, blank=True, null=True)
+    branch = models.CharField(max_length=40, blank=True, null=True)
     year = models.IntegerField(null=True, blank=True)
     picture = models.ImageField(upload_to="candidate_pictures/", blank=True, null=True)
     election_round = models.ForeignKey(
@@ -30,9 +31,7 @@ class Candidate(models.Model):
 
 
 class Vote(models.Model):
-    voter = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )  # Use AUTH_USER_MODEL
+    voter = models.ForeignKey(User, on_delete=models.CASCADE) 
     election_round = models.ForeignKey("ElectionRound", on_delete=models.CASCADE)
     candidate = models.ForeignKey("Candidate", on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)

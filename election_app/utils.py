@@ -2,9 +2,8 @@ from web3 import Web3
 from .models import ElectionRound, Candidate
 import os
 import json
-from dotenv import load_dotenv
+from django.utils import timezone
 
-load_dotenv()
 
 # Load environment variables
 infura_url = os.getenv('INFURA_URL','https://holesky.infura.io/v3/8829b151914a40b29dbfb359287f73b3')
@@ -419,6 +418,8 @@ def add_election_round_to_blockchain(name, start_date, end_date):
     attempts = 0
     max_attempts = 5  # Maximum number of retry attempts
     gas_price = w3.to_wei('50', 'gwei')  # Initial gas price
+    start_date_utc = timezone.make_aware(start_date, timezone.utc) if timezone.is_naive(start_date) else start_date
+    end_date_utc = timezone.make_aware(end_date, timezone.utc) if timezone.is_naive(end_date) else end_date
 
     while attempts < max_attempts:
         try:
@@ -426,8 +427,8 @@ def add_election_round_to_blockchain(name, start_date, end_date):
 
             tx = contract.functions.addElectionRound(
                 name,
-                int(start_date.timestamp()),
-                int(end_date.timestamp())
+                int(start_date_utc.timestamp()),
+                int(end_date_utc.timestamp())
             ).build_transaction({
                 'from': account.address,
                 'nonce': nonce,

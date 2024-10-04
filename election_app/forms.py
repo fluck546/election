@@ -1,6 +1,6 @@
 from django import forms
 from .models import Vote, Candidate, ElectionRound, Candidate, Vote
-from faceRecognition.models import CustomUser
+from faceRecognition.models import User
 
 
 class VoteForm(forms.ModelForm):
@@ -20,7 +20,7 @@ class VoteForm(forms.ModelForm):
 
 class CustomUserForm(forms.ModelForm):
     class Meta:
-        model = CustomUser
+        model = User
         fields = ["sid", "name", "last_name", "branch", "is_active", "is_staff"]
 
 

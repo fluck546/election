@@ -2,10 +2,10 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+
 from .models import ElectionRound, Candidate, Vote
-from faceRecognition.models import CustomUser
-from .forms import VoteForm, CustomUserForm, ElectionRoundForm, CandidateForm
+from faceRecognition.models import User
+from .forms import  CustomUserForm, ElectionRoundForm, CandidateForm
 from django.utils import timezone
 from web3 import Web3
 import json
@@ -21,7 +21,9 @@ from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 import logging
-from django.contrib.auth import logout,authenticate, login, get_backends
+from django.contrib.auth import logout,authenticate, login
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -608,9 +610,10 @@ def staff_required(view_func):
 
 
 import csv
-# List and Create Views for CustomUser
+# List and Create Views for User
 @staff_required
 def manage_users(request):
+    users = User.objects.all().order_by('-id')
     # Handle file upload and CSV import
     if request.method == 'POST' and request.FILES.get('csv_file'):
         csv_file = request.FILES['csv_file']
@@ -628,8 +631,8 @@ def manage_users(request):
                 # Add other fields as necessary, and ensure they match your model
                 
                 # Create user or handle duplicates
-                if not CustomUser.objects.filter(sid=sid).exists():
-                    CustomUser.objects.create(
+                if not User.objects.filter(sid=sid).exists():
+                    User.objects.create(
                         sid=sid,
                         name=name,
                         last_name=last_name,
@@ -643,12 +646,8 @@ def manage_users(request):
             messages.error(request, f"Error processing CSV file: {str(e)}")
             return redirect('manage_users')
 
-    # Your existing logic for displaying and managing users
-    search_query = request.GET.get("search_query", "")
-    if search_query:
-        users = CustomUser.objects.filter(name__icontains=search_query)
-    else:
-        users = CustomUser.objects.all()
+    
+
 
     return render(
         request, 
@@ -657,10 +656,10 @@ def manage_users(request):
     )
 
 
-# Edit and Delete View for CustomUser
+# Edit and Delete View for User
 @staff_required
 def edit_user(request, user_id):
-    user = get_object_or_404(CustomUser, id=user_id)
+    user = get_object_or_404(User, id=user_id)
 
     if request.method == "POST":
         user.sid = request.POST["sid"]
@@ -678,7 +677,7 @@ def edit_user(request, user_id):
 
 @staff_required
 def delete_user(request, user_id):
-    user = get_object_or_404(CustomUser, id=user_id)
+    user = get_object_or_404(User, id=user_id)
     user.delete()
     messages.success(request, "ลบผู้ใช้รายนี้เเล้ว")
     return redirect("manage_users")
@@ -687,11 +686,7 @@ def delete_user(request, user_id):
 # round management
 @staff_required
 def manage_rounds(request):
-    search_query = request.GET.get("search_query", "")
-    if search_query:
-        rounds = ElectionRound.objects.filter(name__icontains=search_query)
-    else:
-        rounds = ElectionRound.objects.all()
+    rounds = ElectionRound.objects.all().order_by('-id')
 
     if request.method == "POST":
         form = ElectionRoundForm(request.POST)
@@ -744,7 +739,7 @@ def delete_round(request, round_id):
 # manage candidate
 @staff_required
 def manage_candidates(request):
-    election_rounds = ElectionRound.objects.all()
+    election_rounds = ElectionRound.objects.all().order_by('-id')
     
     search_query = request.GET.get("search_query", "")
     if search_query:
@@ -878,11 +873,11 @@ def manage_votes(request):
     # Perform search based on candidate name, if provided
     search_query = request.GET.get("search_query", "")
     if search_query:
-        # Filter by candidate name
-        rounds = ElectionRound.objects.filter(candidates__name__icontains=search_query).distinct()
+        
+        rounds = ElectionRound.objects.filter(candidates__name__icontains=search_query).distinct().order_by('-id')
     else:
         # Get all rounds with aggregated vote counts for each candidate
-        rounds = ElectionRound.objects.prefetch_related('candidates').all()
+        rounds = ElectionRound.objects.prefetch_related('candidates').all().order_by('-id')
 
     return render(
         request, 
@@ -932,11 +927,7 @@ def get_round_votes(request, round_id):
     except Exception as e:
         print(f"Error fetching round votes: {e}")
         return JsonResponse({'error': 'Failed to load votes'}, status=500)
-
-
-
-
-
+    
 def custom_logout(request):
     logout(request)
     return redirect("login_select")

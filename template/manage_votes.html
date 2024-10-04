@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}Manage Votes{% endblock %}
+{% block title %}ดูผลโหวต{% endblock %}
 
 {% block content %}
 <div class="bg-white p-6 rounded-lg shadow-md">
-  <h1 class="text-2xl font-bold mb-6">Manage Votes</h1>
+  <h1 class="text-2xl font-bold mb-6">ดูผลโหวต</h1>
 
   <!-- Search form -->
   <form method="GET" action="{% url 'manage_votes' %}" class="mb-4">
@@ -18,7 +18,7 @@
       type="submit"
       class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     >
-      Search
+      ค้นหา
     </button>
   </form>
 
@@ -27,7 +27,7 @@
     <table class="min-w-full bg-white border border-gray-300 rounded-lg">
       <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
         <tr>
-          <th class="py-3 px-6 text-left">Round</th>
+          <th class="py-3 px-6 text-left">ชื่อรอบ</th>
           <th class="py-3 px-6 text-left">Actions</th>
         </tr>
       </thead>
@@ -40,7 +40,7 @@
               onclick="openVoteModal('{{ round.id }}')"
               class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded"
             >
-              View Details
+              ดูรายละเอียด
             </button>
           </td>
           
@@ -57,14 +57,14 @@
   class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
 >
   <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-    <h2 class="text-xl font-bold mb-4">Round Results</h2>
+    <h2 class="text-xl font-bold mb-4">รายระเอียดของรอบนี้</h2>
     
     <table class="min-w-full bg-white border border-gray-300 rounded-lg">
       <thead>
         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-          <th class="py-3 px-6 text-left">Candidate</th>
-          <th class="py-3 px-6 text-left">Last Name</th>
-          <th class="py-3 px-6 text-left">Votes</th>
+          <th class="py-3 px-6 text-left">ชื่อ</th>
+          <th class="py-3 px-6 text-left">นามสกุุล</th>
+          <th class="py-3 px-6 text-left">จำนวนโหวต</th>
         </tr>
       </thead>
       <tbody id="voteDetailsBody">
@@ -74,14 +74,14 @@
     
     <!-- Add the additional section for total votes, start, and end date -->
     <div class="mt-4">
-      <p id="totalVotes" class="font-bold">Total Votes: </p>
-      <p id="startDate" class="text-gray-600">Start Date: </p>
-      <p id="endDate" class="text-gray-600">End Date: </p>
+      <p id="totalVotes" class="font-bold">โหวตรวม: </p>
+      <p id="startDate" class="text-gray-600">วันและเวลาที่เริ่มเปิดหีบ: </p>
+      <p id="endDate" class="text-gray-600">วันและเวลาที่ปิดหีบ: </p>
     </div>
 
     <div class="mt-4 flex justify-between">
       <button class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="closeVoteModal()">Close</button>
-      <button id="generatePdfButton" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded" onclick="generatePdf({{ round.id }})">Generate PDF</button>
+      <button id="generatePdfButton" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded" onclick="generatePdf({{ round.id }})">ดาวน์โหลดเอกสาร</button>
 
     </div>
   </div>

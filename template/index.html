@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Select Election Round and Vote</title>
+    <title>หน้าหลัก</title>
 
     <!-- Tailwind CSS CDN -->
     <link
@@ -46,8 +46,8 @@
   </head>
   <body class="bg-gray-100">
     <div class="container mx-auto mt-10">
-      <!-- Username at the top right -->
-      <div class="username">Hello, {{ request.user.name }}!</div>
+ 
+      <div class="username">สวัสดึคุณ, {{ request.user.name }} {{ request.user.lastname }}!</div>
 
       <!-- Logout button -->
       <form action="{% url 'logout' %}" method="post">
@@ -56,12 +56,12 @@
           class="logout bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded"
           type="submit"
         >
-          Logout
+          ออกจากระบบ
         </button>
       </form>
 
       <h1 class="text-center text-2xl font-bold mb-6">
-        Active Election Rounds
+        รอบเลือกตั้งที่เปิด
       </h1>
 
       <div class="content-wrapper">
@@ -79,7 +79,7 @@
                   {% csrf_token %}
                   <input type="hidden" name="round_id" value="{{ round.id }}" />
                   <label for="candidate_{{ round.id }}" class="block text-gray-700">
-                    Select Candidate:
+                    เลือกผู้สมัครเลือกตั้ง:
                   </label>
                   <select
                     name="candidate_id"
@@ -88,7 +88,7 @@
                     required
                     onchange="displayCandidateDetails(this)"
                   >
-                    <option value="">-- Select Candidate --</option>
+                    <option value="">-- เลือกผู้สมัครเลือกตั้ง --</option>
                     {% for candidate in round.candidates %}
                     <option
                       value="{{ candidate.id }}"
@@ -106,20 +106,20 @@
                   
                   <!-- Placeholder for displaying the selected candidate's details -->
                   <div id="candidateDetails_{{ round.id }}" class="p-4 bg-gray-100 rounded mt-4 hidden">
-                    <h3 class="text-lg font-semibold">Candidate Details:</h3>
-                    <p><strong>Name:</strong> <span id="candidateName_{{ round.id }}"></span></p>
-                    <p><strong>Last Name:</strong> <span id="candidateLastName_{{ round.id }}"></span></p>
-                    <p><strong>Branch:</strong> <span id="candidateBranch_{{ round.id }}"></span></p>
-                    <p><strong>Year:</strong> <span id="candidateYear_{{ round.id }}"></span></p>
-                    <p><strong>Details:</strong> <span id="candidateDetail_{{ round.id }}"></span></p>
-                    <p><strong>Picture:</strong></p>
+                    <h3 class="text-lg font-semibold">รยละเอียดผูู้สมัคร:</h3>
+                    <p><strong>ชื่อ:</strong> <span id="candidateName_{{ round.id }}"></span></p>
+                    <p><strong>นามสกุุล:</strong> <span id="candidateLastName_{{ round.id }}"></span></p>
+                    <p><strong>สาขา:</strong> <span id="candidateBranch_{{ round.id }}"></span></p>
+                    <p><strong>ชั้นปี:</strong> <span id="candidateYear_{{ round.id }}"></span></p>
+                    <p><strong>นโยบาย:</strong> <span id="candidateDetail_{{ round.id }}"></span></p>
+                    <p><strong>รูปผู้สมัคร:</strong></p>
                     <img id="candidatePicture_{{ round.id }}" src="" alt="Candidate Picture" class="w-24 h-24 object-cover rounded" />
                   </div>
                   <button
                     type="submit"
                     class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
                   >
-                    Submit Vote
+                    โหวต
                   </button>
                 </form>
               </div>
@@ -127,7 +127,7 @@
             {% endfor %}
           {% else %}
             <p class="text-gray-500 text-center">
-              No active election rounds at this time.
+              ขณะนี้ไม่มีรอบการเลือกตั้งที่เปิดอยู่
             </p>
           {% endif %}
         </div>
@@ -141,12 +141,12 @@
               {% if round.user_has_voted %}
               <div class="bg-white shadow rounded-lg p-4 mb-4">
                 <p class="text-green-600 font-bold">
-                  You have already voted in {{ round.name }}. <br />
-                  Results will be available at {{ round.end_date }}.
+                  คุณได้โหวต {{ round.name }} ไปแล้วและ <br />
+                  ผลการเลือกตั้งจะถูกประกาศเวลาา {{ round.end_date }}.
                 </p>
                 <!-- Total Votes Submitted After Results Availability -->
                 <p class="text-gray-700 font-bold">
-                  Total Votes Submitted: {{ round.total_votes }}
+                  คะแนนโหวตทั้งหมดขณะนี้: {{ round.total_votes }}
                 </p>
               </div>
               {% endif %}
@@ -156,7 +156,7 @@
           <!-- Past Election Results -->
           <div class="past-results">
             <h1 class="text-center text-xl font-bold mb-4">
-              Past Election Results
+              รอบการเลือกตั้งที่ผ่านมา
             </h1>
             <ul class="space-y-2">
               {% for round in all_rounds %}
@@ -164,7 +164,7 @@
                 <a
                   href="{% url 'results' round.id %}"
                   class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded block w-full text-center"
-                  >View Results: {{ round.name }}</a
+                  >ดูผล: {{ round.name }}</a
                 >
               </li>
               {% endfor %}

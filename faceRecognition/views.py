@@ -2,7 +2,7 @@ import face_recognition
 import base64
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
-from .models import CustomUser
+from .models import User
 import random
 import string
 from io import BytesIO
@@ -11,6 +11,8 @@ import numpy as np
 import json
 from django.contrib.auth.decorators import user_passes_test
 
+def compare_faces(existing_face_encoding, new_face_encoding):
+    return face_recognition.compare_faces([existing_face_encoding], new_face_encoding)[0]
 
 def staff_required(view_func):
     decorated_view_func = user_passes_test(lambda u: u.is_staff)(view_func)
@@ -34,7 +36,7 @@ def register(request):
         captured_image_base64 = request.POST.get("image")
 
         # Check if the user exists with the given SID and other fields but is not yet active
-        user = CustomUser.objects.filter(sid=sid, name=name, last_name=last_name, branch=branch, is_active=False).first()
+        user = User.objects.filter(sid=sid, name=name, last_name=last_name, branch=branch, is_active=False).first()
         
         if not user:
             return render(
@@ -48,6 +50,15 @@ def register(request):
             image_processing_outcome = process_user_image(captured_image_base64)
             if image_processing_outcome.get('success'):
                 face_encoding = image_processing_outcome.get('face_encoding')
+                
+                existing_users = User.objects.exclude(id=user.id).filter(face_encoding__isnull=False)
+                for existing_user in existing_users:
+                    existing_face_encoding = existing_user.get_face_encoding()  # Ensure you have a method to get the encoding from JSON
+                    if compare_faces(existing_face_encoding, face_encoding):
+                        return render(request, "register.html", {"error": "This face is already registered to another user."})
+                
+                
+                
                 user.face_encoding = face_encoding
                 user.is_active = True  # Activate the user
                 user.save()
@@ -106,7 +117,7 @@ def facial_login(request):
                 captured_face_encoding = captured_face_encodings[0]
 
                 # Compare captured face encoding with known face encodings in the database
-                for user in CustomUser.objects.all():
+                for user in User.objects.all():
                     if user.face_encoding:  # Ensure face_encoding is not None
                         known_face_encoding = json.loads(
                             user.face_encoding

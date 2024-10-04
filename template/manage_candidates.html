@@ -35,6 +35,16 @@
             class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
           />
         </div>
+        
+        <div class="mb-4">
+          <label for="last_name" class="block text-gray-700">Last Name:</label>
+          <input
+            type="text"
+            id="last_name"
+            name="last_name"
+            class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+          />
+        </div>
         <div class="mb-4">
           <label for="election_round" class="block text-gray-700"
             >Election Round:</label
@@ -48,15 +58,6 @@
             <option value="{{ round.id }}">{{ round.name }}</option>
             {% endfor %}
           </select>
-        </div>
-        <div class="mb-4">
-          <label for="last_name" class="block text-gray-700">Last Name:</label>
-          <input
-            type="text"
-            id="last_name"
-            name="last_name"
-            class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
-          />
         </div>
         <div class="mb-4">
           <label for="detail" class="block text-gray-700">Detail:</label>
@@ -155,18 +156,7 @@
             class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
           />
         </div>
-        <div class="mb-4">
-          <label for="edit_election_round" class="block text-gray-700"
-            >Election Round:</label
-          >
-          <select
-            id="edit_election_round"
-            name="election_round"
-            class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
-          >
-            <!-- Options will be dynamically loaded here -->
-          </select>
-        </div>
+        
         <div class="mb-4">
           <label for="edit_last_name" class="block text-gray-700"
             >Last Name:</label
@@ -177,6 +167,17 @@
             name="last_name"
             class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
           />
+        </div>
+        <div class="mb-4">
+          <label for="edit_election_round" class="block text-gray-700"
+            >Election Round:</label
+          >
+          <select
+            id="edit_election_round"
+            name="election_round"
+            class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+          >
+          </select>
         </div>
         <div class="mb-4">
           <label for="edit_detail" class="block text-gray-700">Detail:</label>
@@ -238,7 +239,7 @@
   </div>
 
   <!-- Existing Candidates Table -->
-  <h2 class="text-xl font-semibold mt-4 mb-4">Existing Candidates</h2>
+
   <div class="overflow-x-auto">
     <table
       id="candidatesTable"

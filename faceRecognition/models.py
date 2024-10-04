@@ -31,21 +31,22 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(sid, password, **extra_fields)
 
 
-class CustomUser(AbstractBaseUser, PermissionsMixin):
-    sid = models.CharField(max_length=255, unique=True)
+class User(AbstractBaseUser, PermissionsMixin):
+    sid = models.CharField(max_length=20, unique=True)
     face_encoding = models.TextField(
         blank=True, null=True, unique=True
     )  # Store face encoding as text
-    name = models.CharField(max_length=255, blank=True, null=True)
-    last_name = models.CharField(max_length=255, blank=True, null=True)
-    branch = models.CharField(max_length=255, blank=True, null=True)
+    name = models.CharField(max_length=40, blank=True, null=True)
+    last_name = models.CharField(max_length=40, blank=True, null=True)
+    branch = models.CharField(max_length=40, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    email = models.EmailField(max_length=50, blank=True,null=True)
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = "sid"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['name']
 
     groups = models.ManyToManyField(
         "auth.Group",
