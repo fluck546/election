@@ -5,6 +5,45 @@ import json
 from django.utils import timezone
 
 
+# # Define the path for the configuration file
+# config_file_path = os.path.join(os.path.dirname(__file__), 'blockchain_config.json')
+
+# def initialize_config():
+#     """
+#     Check if the config file exists. If not, prompt the user to input the private key and account address.
+#     """
+#     if not os.path.exists(config_file_path):
+#         # Prompt the user for the account details
+#         account_address = input("Enter your Ethereum account address: ")
+#         private_key = input("Enter your Ethereum private key: ")
+
+#         # Save the details in the configuration file
+#         with open(config_file_path, 'w') as config_file:
+#             config_data = {
+#                 'account_address': account_address,
+#                 'private_key': private_key
+#             }
+#             json.dump(config_data, config_file)
+
+#         return config_data
+#     else:
+#         # Load the existing configuration
+#         with open(config_file_path, 'r') as config_file:
+#             return json.load(config_file)
+
+# # Load the configuration data (account address, private key)
+# config_data = initialize_config()
+
+# # Extract account address and private key
+# account_address = config_data.get('account_address')
+# private_key = config_data.get('private_key')
+
+# # Ethereum connection details
+# infura_url = os.getenv('INFURA_URL','https://holesky.infura.io/v3/8829b151914a40b29dbfb359287f73b3')
+# contract_address = os.getenv('CONTRACT_ADDRESS','0x8A00c34d415D2b13eEFE0Cd85d8d0A9dAa4457b2')
+
+# contract_abi = json.loads("""...""")  # Keep the ABI as it is
+
 # Load environment variables
 infura_url = os.getenv('INFURA_URL','https://holesky.infura.io/v3/8829b151914a40b29dbfb359287f73b3')
 private_key = os.getenv('PRIVATE_KEY','b228a7e0227f5af609b665efba1bb997d85f51666dcb2c8afe4a61528a75de6d')
