@@ -4,8 +4,8 @@
 
 {% block content %}
 <div class="bg-white p-6 rounded-lg shadow-md">
-  <h1 class="text-2xl font-bold mb-6">Manage Users</h1>
-  <button onclick="openAddUserModal()" class="mb-4 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Add New User</button>
+  <h1 class="text-2xl font-bold mb-6">จัดการข้อมูลผู้ใช้</h1>
+  <button onclick="openAddUserModal()" class="mb-4 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">เพิ่มผู้ใช้</button>
   <!-- CSV Upload Form -->
   <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
@@ -21,7 +21,7 @@
       type="submit"
       class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
     >
-      Import Users from CSV
+      เพิ่มข้อมูลผ่าน CSV
     </button>
   </form>
   <div class="overflow-x-auto mb-4">
@@ -30,9 +30,9 @@
     <table id="userTable" class="dataTable min-w-full bg-white border border-gray-300 rounded-lg mt-10">
       <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
         <tr>
-          <th class="py-3 px-6 text-left">SID</th>
-          <th class="py-3 px-6 text-left">Name</th>
-          <th class="py-3 px-6 text-left">Branch</th>
+          <th class="py-3 px-6 text-left">รหัสนักศึกษา</th>
+          <th class="py-3 px-6 text-left">ชื่อ-สกุล</th>
+          <th class="py-3 px-6 text-left">สาขา</th>
           <th class="py-3 px-6 text-center">Actions</th>
         </tr>
       </thead>
@@ -56,24 +56,24 @@
 <!-- Add User Modal -->
 <div id="addUserModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden modal">
   <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
-    <h2 class="text-xl font-bold mb-4">Add New User</h2>
+    <h2 class="text-xl font-bold mb-4">เพิ่มผู้ใช้</h2>
     <form method="POST" action="{% url 'add_user' %}">
       {% csrf_token %}
       <!-- Input fields for adding a user -->
       <div class="mb-4">
-        <label for="sid" class="block text-gray-700">SID:</label>
+        <label for="sid" class="block text-gray-700">รหัสนักศึกษา:</label>
         <input type="text" id="sid" name="sid" class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full" />
       </div>
       <div class="mb-4">
-        <label for="name" class="block text-gray-700">Name:</label>
+        <label for="name" class="block text-gray-700">ชื่อ:</label>
         <input type="text" id="name" name="name" class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full" />
       </div>
       <div class="mb-4">
-        <label for="last_name" class="block text-gray-700">Last Name:</label>
+        <label for="last_name" class="block text-gray-700">นามสกุุล:</label>
         <input type="text" id="last_name" name="last_name" class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full" />
       </div>
       <div class="mb-4">
-        <label for="branch" class="block text-gray-700">Branch:</label>
+        <label for="branch" class="block text-gray-700">สาขา:</label>
         <input type="text" id="branch" name="branch" class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full" />
       </div>
       <div class="mb-4">
@@ -81,8 +81,8 @@
         <input type="checkbox" id="is_staff" name="is_staff" class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3" />
       </div>
       <div class="flex justify-between">
-        <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="closeAddUserModal()">Cancel</button>
-        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Add User</button>
+        <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="closeAddUserModal()">ยกเลิก</button>
+        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">เพิ่มผู้ใช้</button>
       </div>
     </form>
   </div>
@@ -94,12 +94,12 @@ id="editUserModal"
 class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
 >
   <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-      <h2 class="text-xl font-bold mb-4">Edit User</h2>
+      <h2 class="text-xl font-bold mb-4">แก้ไขผู้ใช้</h2>
       <form id="editUserForm" method="POST">
           {% csrf_token %}
           <input type="hidden" id="edit_user_id" name="user_id" />
           <div class="mb-4">
-              <label for="edit_sid" class="block text-gray-700">SID:</label>
+              <label for="edit_sid" class="block text-gray-700">รหัสนักศึกษา:</label>
               <input
                 type="text"
                 id="edit_sid"
@@ -108,7 +108,7 @@ class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center 
               />
           </div>
           <div class="mb-4">
-              <label for="edit_name" class="block text-gray-700">Name:</label>
+              <label for="edit_name" class="block text-gray-700">ชื่อ:</label>
               <input
                 type="text"
                 id="edit_name"
@@ -117,7 +117,7 @@ class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center 
               />
           </div>
           <div class="mb-4">
-              <label for="edit_last_name" class="block text-gray-700">Last Name:</label>
+              <label for="edit_last_name" class="block text-gray-700">นามสกุุล:</label>
               <input
                 type="text"
                 id="edit_last_name"
@@ -126,7 +126,7 @@ class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center 
               />
           </div>
           <div class="mb-4">
-              <label for="edit_branch" class="block text-gray-700">Branch:</label>
+              <label for="edit_branch" class="block text-gray-700">สาขา:</label>
               <input
                 type="text"
                 id="edit_branch"
@@ -149,13 +149,13 @@ class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center 
                 class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded"
                 onclick="closeEditUserModal()"
               >
-                Cancel
+                ยกเลิก
               </button>
               <button
                 type="submit"
                 class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
               >
-                Save Changes
+                บันทึกข้อมูล
               </button>
           </div>
       </form>

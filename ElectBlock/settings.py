@@ -29,8 +29,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 ROOT_URLCONF = 'ElectBlock.urls'
 
@@ -117,3 +119,5 @@ LOGGING = {
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 
                            'election_app.authentication.CustomBackend']
 CSRF_COOKIE_SECURE = False
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
