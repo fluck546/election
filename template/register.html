@@ -1,76 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Register with Face Recognition</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100">
-
-<div class="container mx-auto flex justify-center items-center min-h-screen">
-    <div class="bg-white shadow-lg p-6 w-full max-w-lg rounded">
-        <h1 class="text-center text-2xl font-bold mb-6">Register with Face Recognition</h1>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div
+      class="container mx-auto flex justify-center items-center min-h-screen"
+    >
+      <div class="bg-white shadow-lg p-6 w-full max-w-lg rounded">
+        <h1 class="text-center text-2xl font-bold mb-6">
+          Register with Face Recognition
+        </h1>
 
         <!-- Error message display -->
         {% if error %}
         <div class="bg-red-500 text-white text-center py-2 rounded mb-6">
-            {{ error }}
+          {{ error }}
         </div>
         {% endif %}
 
-        <!-- Form to capture sid and facial data -->
-        <form id="register-form" method="POST" action="{% url 'register' %}" enctype="multipart/form-data" class="space-y-6">
-            {% csrf_token %}
+        <!-- Form to capture sid, name, last_name, branch, and facial data -->
+        <form
+          id="register-form"
+          method="POST"
+          action="{% url 'register' %}"
+          enctype="multipart/form-data"
+          class="space-y-6"
+        >
+          {% csrf_token %}
 
-            <!-- SID (Username) Field -->
-            <div>
-                <label for="sid" class="block text-gray-700 font-medium">Sid:</label>
-                <input type="text" id="sid" name="sid" class="bg-blue-100 border border-gray-300 text-gray-900 rounded-lg py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" required>
-            </div>
+          <!-- SID Field -->
+          <div>
+            <label for="sid" class="block text-gray-700 font-medium"
+              >SID:</label
+            >
+            <input
+              type="text"
+              id="sid"
+              name="sid"
+              class="bg-blue-100 border border-gray-300 text-gray-900 rounded-lg py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
+          </div>
 
-            <!-- Capture Your Face -->
-            <h2 class="text-center text-lg font-semibold">Capture Your Face</h2>
-            <div class="flex justify-center mb-3">
-                <video id="video" class="border rounded" width="320" height="240" autoplay></video>
-            </div>
-            <div class="flex justify-center">
-                <button type="button" id="capture" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Capture Photo</button>
-            </div>
+          <!-- Name Field -->
+          <div>
+            <label for="name" class="block text-gray-700 font-medium"
+              >Name:</label
+            >
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="bg-blue-100 border border-gray-300 text-gray-900 rounded-lg py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
+          </div>
+
+          <!-- Last Name Field -->
+          <div>
+            <label for="last_name" class="block text-gray-700 font-medium"
+              >Last Name:</label
+            >
+            <input
+              type="text"
+              id="last_name"
+              name="last_name"
+              class="bg-blue-100 border border-gray-300 text-gray-900 rounded-lg py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
+          </div>
+
+          <!-- Branch Field -->
+          <div>
+            <label for="branch" class="block text-gray-700 font-medium"
+              >Branch:</label
+            >
+            <input
+              type="text"
+              id="branch"
+              name="branch"
+              class="bg-blue-100 border border-gray-300 text-gray-900 rounded-lg py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
+          </div>
+
+          <!-- Capture Your Face -->
+          <h2 class="text-center text-lg font-semibold">Capture Your Face</h2>
+          <div class="flex justify-center mb-3">
+            <!-- Video feed to capture face -->
+            <video
+              id="video"
+              class="border rounded"
+              width="320"
+              height="240"
+              autoplay
+            ></video>
+
+            <!-- Hidden Canvas -->
             <canvas id="canvas" width="320" height="240" class="hidden"></canvas>
+          </div>
 
-            <!-- Hidden field to store the captured image -->
-            <input type="hidden" name="image" id="image">
+          <!-- Button to capture image -->
+          <div class="flex justify-center">
+            <button
+              type="button"
+              id="capture"
+              class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+            >
+              Capture Photo
+            </button>
+          </div>
 
-            <!-- Register Button -->
-            <div class="flex justify-center">
-                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded w-full max-w-xs">Register</button>
-            </div>
+          <!-- Captured image will appear here -->
+          <div class="flex justify-center my-4">
+            <img id="captured-image" class="hidden border rounded" width="320" height="240" />
+          </div>
+
+          <!-- Hidden field to store the captured image -->
+          <input type="hidden" name="image" id="image" />
+
+          <!-- Register Button -->
+          <div class="flex justify-center">
+            <button
+              type="submit"
+              class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded w-full max-w-xs"
+            >
+              Register
+            </button>
+          </div>
         </form>
+      </div>
     </div>
-</div>
 
-<script>
-    const video = document.getElementById('video');
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-            video.srcObject = stream;
+    <script>
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const context = canvas.getContext("2d");
+      const capturedImage = document.getElementById("captured-image");
+
+      // Access the webcam video stream
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          video.srcObject = stream;
         })
-        .catch(err => {
-            console.error("Error accessing webcam: " + err);
+        .catch((err) => {
+          console.error("Error accessing webcam: " + err);
         });
 
-    // Capture the image and save it as a base64 string in the hidden input
-    document.getElementById('capture').addEventListener('click', function() {
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
+      // Capture the image and save it as a base64 string in the hidden input
+      document.getElementById("capture").addEventListener("click", function () {
+        // Draw the current video frame on the canvas
         context.drawImage(video, 0, 0, 320, 240);
-        const dataURL = canvas.toDataURL('image/png');
-        document.getElementById('image').value = dataURL;
-        alert("Photo captured successfully!");
-    });
-</script>
+        
+        // Get the base64 image data
+        const dataURL = canvas.toDataURL("image/png");
 
-</body>
+        // Set the value of the hidden input to the base64 image data
+        document.getElementById("image").value = dataURL;
+
+        // Display the captured image in the img tag and hide the video
+        capturedImage.src = dataURL;
+        capturedImage.classList.remove("hidden");
+        video.classList.add("hidden");
+        {% if messages %}
+        {% for message in messages %}
+          {% if message.tags == 'success' %}
+            Swal.fire({
+              title: 'Success!',
+              text: "{{ message }}",
+              icon: 'success',
+              confirmButtonText: 'OK'
+            });
+          {% elif message.tags == 'error' %}
+            Swal.fire({
+              title: 'Error!',
+              text: "{{ message }}",
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      });
+    </script>
+  </body>
 </html>

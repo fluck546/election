@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Login</title>
+
+    <!-- Tailwind CSS CDN -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div
+      class="container mx-auto flex flex-col justify-center items-center min-h-screen"
+    >
+      <div class="card shadow-lg p-6 bg-white w-full max-w-lg">
+        <div class="flex justify-center mb-4 text-xl">
+        ยินดีต้อนรับสู่เว็ปไซต์การเลือกตั้ง
+    </div>
+        <!-- Login link -->
+        <div class="flex justify-center mb-4">
+          <a
+            href="{% url 'facial_login' %}"
+            class="bg-blue-500 hover:bg-green-600 text-white py-2 px-4 rounded w-full max-w-xs text-center"
+            >ล็อคอิน</a
+          >
+        </div>
+        <!-- Register Link -->
+        <div class="flex justify-center mb-4">
+          <a
+            href="{% url 'register' %}"
+            class="bg-blue-500 hover:bg-green-600 text-white py-2 px-4 rounded w-full max-w-xs text-center"
+            >ลงทะเบียนครั้งแรก</a
+          >
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

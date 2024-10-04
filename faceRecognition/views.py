@@ -21,71 +21,64 @@ def generate_random_password():
     """Generate a random password for the user."""
     return "".join(random.choices(string.ascii_letters + string.digits, k=12))
 
+def login_select(request):
+    return render(request, 'login_select.html')
 
-@staff_required
 def register(request):
     if request.method == "POST":
+        # Retrieve data from form
         sid = request.POST.get("sid")
+        name = request.POST.get("name")
+        last_name = request.POST.get("last_name")
+        branch = request.POST.get("branch")
         captured_image_base64 = request.POST.get("image")
 
-        # Check if the SID already exists
-        if CustomUser.objects.filter(sid=sid).exists():
+        # Check if the user exists with the given SID and other fields but is not yet active
+        user = CustomUser.objects.filter(sid=sid, name=name, last_name=last_name, branch=branch, is_active=False).first()
+        
+        if not user:
             return render(
                 request,
                 "register.html",
-                {"error": "Sid already exists. Please choose a different Sid."},
+                {"error": "No matching inactive user found or you have already been activated. Please check your details or contact support."},
             )
 
-        if sid and captured_image_base64:
-            # Create the user with a random password
-            password = generate_random_password()
-            user = CustomUser.objects.create(sid=sid)
-            user.set_password(password)  # Set the random password
-            user.save()
-
-            # Decode the base64 image
-            format, imgstr = captured_image_base64.split(
-                ";base64,"
-            )  # Split the format and data
-            image_data = base64.b64decode(imgstr)
-
-            # Convert the image data to an image object using PIL
-            image = Image.open(BytesIO(image_data))
-
-            # Ensure the image is in RGB mode (required by face_recognition)
-            if image.mode != "RGB":
-                image = image.convert("RGB")
-
-            image_np = np.array(
-                image
-            )  # Convert image to a numpy array for face_recognition
-
-            # Extract face encodings using face_recognition
-            face_encodings = face_recognition.face_encodings(image_np)
-
-            if face_encodings:  # Check if any face encodings were detected
-                face_encoding = face_encodings[0].tolist()  # Convert ndarray to list
-                # Save face encoding directly in CustomUser
-                user.set_face_encoding(face_encoding)
+        if captured_image_base64:
+            # Process the image and extract face encoding
+            image_processing_outcome = process_user_image(captured_image_base64)
+            if image_processing_outcome.get('success'):
+                face_encoding = image_processing_outcome.get('face_encoding')
+                user.face_encoding = face_encoding
+                user.is_active = True  # Activate the user
                 user.save()
 
-                # Automatically log the user in after registration
-                login(request, user)
+                # Log the user in after registration
+                backend = 'django.contrib.auth.backends.ModelBackend'
+                login(request, user, backend = backend)
                 return redirect("index")
             else:
-                return render(
-                    request,
-                    "register.html",
-                    {"error": "No face detected in the image. Please try again."},
-                )
-        else:
-            return render(
-                request,
-                "register.html",
-                {"error": "Please fill in the sid and capture a face."},
-            )
+                return render(request, "register.html", {"error": image_processing_outcome.get('error')})
 
     return render(request, "register.html")
+
+def process_user_image(captured_image_base64):
+    try:
+        format, imgstr = captured_image_base64.split(";base64,")  # Split format and data
+        image_data = base64.b64decode(imgstr)
+        image = Image.open(BytesIO(image_data))
+        if image.mode != "RGB":
+            image = image.convert("RGB")
+
+        image_np = np.array(image)  # Convert image to numpy array for face_recognition
+        face_encodings = face_recognition.face_encodings(image_np)
+        if face_encodings:
+            return {'success': True, 'face_encoding': face_encodings[0].tolist()}
+        else:
+            return {'success': False, 'error': "No face detected in the image. Please try again."}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+
 
 
 def facial_login(request):
@@ -123,7 +116,8 @@ def facial_login(request):
                         )
 
                         if results[0]:  # Face match found
-                            login(request, user)  # Log the user in
+                            backend = 'django.contrib.auth.backends.ModelBackend'
+                            login(request, user, backend = backend)  # Log the user in
                             return redirect(
                                 "index"
                             )  # Replace 'dashboard' with your desired view name

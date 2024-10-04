@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Manage Votes{% endblock %}
+
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md">
+  <h1 class="text-2xl font-bold mb-6">Manage Votes</h1>
+
+  <!-- Search form -->
+  <form method="GET" action="{% url 'manage_votes' %}" class="mb-4">
+    <input
+      type="text"
+      name="search_query"
+      placeholder="Search candidates..."
+      value="{{ search_query }}"
+      class="bg-gray-100 border border-gray-300 rounded-md py-2 px-4"
+    />
+    <button
+      type="submit"
+      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+    >
+      Search
+    </button>
+  </form>
+
+  <!-- List of rounds -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white border border-gray-300 rounded-lg">
+      <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+        <tr>
+          <th class="py-3 px-6 text-left">Round</th>
+          <th class="py-3 px-6 text-left">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="text-gray-700 text-sm font-light">
+        {% for round in rounds %}
+        <tr class="border-b border-gray-200 hover:bg-gray-100">
+          <td class="py-3 px-6">{{ round.name }}</td>
+          <td class="py-3 px-6">
+            <button
+              onclick="openVoteModal('{{ round.id }}')"
+              class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded"
+            >
+              View Details
+            </button>
+          </td>
+          
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Vote Details Modal -->
+<div
+  id="voteModal"
+  class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden"
+>
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+    <h2 class="text-xl font-bold mb-4">Round Results</h2>
+    
+    <table class="min-w-full bg-white border border-gray-300 rounded-lg">
+      <thead>
+        <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+          <th class="py-3 px-6 text-left">Candidate</th>
+          <th class="py-3 px-6 text-left">Last Name</th>
+          <th class="py-3 px-6 text-left">Votes</th>
+        </tr>
+      </thead>
+      <tbody id="voteDetailsBody">
+        <!-- Vote details will be dynamically loaded here -->
+      </tbody>
+    </table>
+    
+    <!-- Add the additional section for total votes, start, and end date -->
+    <div class="mt-4">
+      <p id="totalVotes" class="font-bold">Total Votes: </p>
+      <p id="startDate" class="text-gray-600">Start Date: </p>
+      <p id="endDate" class="text-gray-600">End Date: </p>
+    </div>
+
+    <div class="mt-4 flex justify-between">
+      <button class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="closeVoteModal()">Close</button>
+      <button id="generatePdfButton" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded" onclick="generatePdf({{ round.id }})">Generate PDF</button>
+
+    </div>
+  </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function generatePdf(roundId) {
+    // Redirect to the download URL
+    window.location.href = `/download_pdf_results/${roundId}/`;
+  }
+
+  function openVoteModal(roundId) {
+    console.log("Round ID:", roundId);
+  fetch(`/get_round_votes/${roundId}/`)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.vote_data) {
+        const voteDetails = data.vote_data.map(vote => `
+          <tr>
+            <td>${vote.name}</td>
+            <td>${vote.last_name}</td>
+            <td>${vote.total_votes}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('voteDetailsBody').innerHTML = voteDetails;
+        document.getElementById('totalVotes').textContent = `Total Votes: ${data.total_votes}`;
+        document.getElementById('startDate').textContent = `Start Date: ${data.start_date}`;
+        document.getElementById('endDate').textContent = `End Date: ${data.end_date}`;
+        
+      }
+      document.getElementById('generatePdfButton').setAttribute('onclick', `generatePdf(${roundId})`);
+      document.getElementById('voteModal').classList.remove('hidden');
+    })
+    .catch((error) => {
+      console.error('Error fetching vote details:', error);
+      alert('Failed to load vote details.');
+    });
+}
+
+
+  function closeVoteModal() {
+    document.getElementById('voteModal').classList.add('hidden');
+  }
+
+  $(document).ready(function () {
+    $(".dataTable").DataTable();
+  });
+</script>
+
+{% endblock %}

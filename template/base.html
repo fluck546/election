@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Admin Dashboard{% endblock %}</title>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
+    <!-- DataTables CSS CDN -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" />
+
+    <style>
+      /* Common modal styling */
+      .modal {
+        z-index: 9999;
+        background-color: rgba(0, 0, 0, 0.6);
+      }
+
+      .modal-content {
+        z-index: 10000;
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        margin: auto;
+      }
+
+      /* Disable scrolling when modal is open */
+      body.modal-open {
+        overflow: hidden;
+      }
+    </style>
+
+    {% block extra_head %}
+    <!-- Extra styles or scripts specific to child templates -->
+    {% endblock %}
+  </head>
+
+  <body class="bg-gray-100">
+    <div class="flex">
+      <!-- Sidebar -->
+      <div class="w-1/4 bg-gray-800 min-h-screen p-6 text-white">
+        <h2 class="text-2xl font-bold mb-6">หน้าแก้ไขข้อมูล</h2>
+        <nav>
+          <ul class="space-y-4">
+            <li><a href="{% url 'manage_users' %}" class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded">จัดการข้อมูลผู้ใช้</a></li>
+            <li><a href="{% url 'manage_rounds' %}" class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded">จัดการข้อมูลรอบการเลือกตั้ง</a></li>
+            <li><a href="{% url 'manage_candidates' %}" class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded">จัดการข้อมูลผู้สมัคร</a></li>
+            <li><a href="{% url 'manage_votes' %}" class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded">เรียกดู้ผลโหวต</a></li>
+            <li>
+              <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button class="logout bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded" type="submit">ออกจากระบบ</button>
+              </form>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- Main Content -->
+      <div class="w-3/4 p-10">
+        {% block content %}
+        <!-- Page-specific content -->
+        {% endblock %}
+      </div>
+    </div>
+
+    <!-- Common scripts for DataTables and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+    <!-- Initialize DataTables -->
+    <script>
+      
+
+      $(document).ready(function () {
+        $(".dataTable").DataTable();
+      });
+      {% if messages %}
+        {% for message in messages %}
+          {% if message.tags == 'success' %}
+            Swal.fire({
+              title: 'Success!',
+              text: "{{ message }}",
+              icon: 'success',
+              confirmButtonText: 'OK'
+            });
+          {% elif message.tags == 'error' %}
+            Swal.fire({
+              title: 'Error!',
+              text: "{{ message }}",
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+    
+    </script>
+
+    {% block extra_scripts %}
+    <!-- Extra scripts specific to child templates -->
+    {% endblock %}
+  </body>
+</html>

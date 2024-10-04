@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ election_round.name }} - Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Election Round: {{ election_round.name }}</h1>
+    <p>Start Date: {{ election_round.start_date }}</p>
+    <p>End Date: {{ election_round.end_date }}</p>
+
+    <h2>Results:</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Candidate</th>
+                <th>Votes</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for candidate in candidates %}
+            <tr>
+                <td>{{ candidate.name }}</td>
+                <td>{{ candidate.vote_set.count }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

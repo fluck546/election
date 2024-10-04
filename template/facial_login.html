@@ -8,21 +8,30 @@
     
     <!-- Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 </head>
 <body class="bg-gray-100">
 
     <div class="container mx-auto flex flex-col justify-center items-center min-h-screen">
         <div class="card shadow-lg p-6 bg-white w-full max-w-lg">
-            <h1 class="text-center text-2xl font-bold mb-6">Login using Face Recognition</h1>
+            <h1 class="text-center text-2xl font-bold mb-6">ล็อคอินผ่านระบบสแกนใบหน้า</h1>
 
             <!-- Video element to display webcam feed -->
             <div class="flex justify-center mb-6">
                 <video id="video" class="border" width="320" height="240" autoplay></video>
             </div>
 
+            <!-- Captured image will appear here -->
+            <div class="flex justify-center mb-6">
+                <img id="captured-image" class="hidden border rounded" width="320" height="240" />
+            </div>
+
             <!-- Capture Button -->
             <div class="flex justify-center mb-4">
-                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded w-full max-w-xs" id="capture">Capture Photo</button>
+                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded w-full max-w-xs" id="capture">ถ่ายรูป</button>
             </div>
             
             <canvas id="canvas" width="320" height="240" class="hidden"></canvas>
@@ -32,14 +41,9 @@
                 {% csrf_token %}
                 <input type="hidden" name="image" id="image">
                 <div class="flex justify-center mb-4">
-                    <button class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded w-full max-w-xs" type="submit">Login with Face</button>
+                    <button class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded w-full max-w-xs" type="submit">ล็อคอิน</button>
                 </div>
             </form>
-
-            <!-- Register Link -->
-            <div class="flex justify-center mb-4">
-                <a href="{% url 'register' %}" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded w-full max-w-xs text-center">Register</a>
-            </div>
 
             <!-- Error Message -->
             {% if error %}
@@ -57,6 +61,10 @@
     <script>
         // Access the camera
         const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const capturedImage = document.getElementById('captured-image');
+
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
                 video.srcObject = stream;
@@ -67,14 +75,37 @@
 
         // Capture the image when the user clicks the "Capture" button
         document.getElementById('capture').addEventListener('click', function() {
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
+            // Draw the current video frame on the canvas
             context.drawImage(video, 0, 0, 320, 240);
 
             // Convert the image to a data URL and store it in the hidden input field
             const dataURL = canvas.toDataURL('image/png');
             document.getElementById('image').value = dataURL;
+
+            // Display the captured image in the img tag and hide the video
+            capturedImage.src = dataURL;
+            capturedImage.classList.remove('hidden');
+            video.classList.add('hidden');
         });
+        {% if messages %}
+        {% for message in messages %}
+          {% if message.tags == 'success' %}
+            Swal.fire({
+              title: 'Success!',
+              text: "{{ message }}",
+              icon: 'success',
+              confirmButtonText: 'OK'
+            });
+          {% elif message.tags == 'error' %}
+            Swal.fire({
+              title: 'Error!',
+              text: "{{ message }}",
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+          {% endif %}
+        {% endfor %}
+      {% endif %}
     </script>
 </body>
 </html>

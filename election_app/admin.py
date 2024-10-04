@@ -16,7 +16,7 @@ private_key = os.getenv(
     "PRIVATE_KEY", "b228a7e0227f5af609b665efba1bb997d85f51666dcb2c8afe4a61528a75de6d"
 )
 contract_address = os.getenv(
-    "CONTRACT_ADDRESS", "0xD2ec278A02A5eb6BF6544936E30bc24D43492124"
+    "CONTRACT_ADDRESS", "0x990944A322a7F928aD3E1bC1B6640b4Ea171da5b"
 )
 account_address = os.getenv(
     "ACCOUNT_ADDRESS", "0xcAFa11cB0cf830426D66D868653f6FdC0128bb3C"

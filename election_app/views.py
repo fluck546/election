@@ -20,7 +20,14 @@ from .utils import add_election_round_to_blockchain, add_candidate_to_blockchain
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+import logging
+from django.contrib.auth import logout,authenticate, login, get_backends
 
+logger = logging.getLogger(__name__)
+
+def results_selection_page(request):
+    rounds = ElectionRound.objects.all()
+    return render(request, 'results_selection.html', {'rounds': rounds})
 
 def encrypt_voter_name(voter_name, key):
     padder = padding.PKCS7(128).padder()
@@ -36,11 +43,11 @@ def encrypt_voter_name(voter_name, key):
 
 
 # Connect to Ethereum node using Infura
-infura_url = "https://sepolia.infura.io/v3/8829b151914a40b29dbfb359287f73b3"
+infura_url = "https://holesky.infura.io/v3/8829b151914a40b29dbfb359287f73b3"
 w3 = Web3(Web3.HTTPProvider(infura_url))
 
 # Contract details
-contract_address = "0xD2ec278A02A5eb6BF6544936E30bc24D43492124"
+contract_address = "0x8A00c34d415D2b13eEFE0Cd85d8d0A9dAa4457b2"
 contract_abi = json.loads(
     """[
 	{
@@ -80,6 +87,88 @@ contract_abi = json.loads(
 			}
 		],
 		"name": "addElectionRound",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_roundId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_candidateId",
+				"type": "uint256"
+			}
+		],
+		"name": "deleteCandidate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_roundId",
+				"type": "uint256"
+			}
+		],
+		"name": "deleteElectionRound",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_roundId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_candidateId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "_newName",
+				"type": "string"
+			}
+		],
+		"name": "editCandidate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_roundId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "_newName",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_newStartDate",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_newEndDate",
+				"type": "uint256"
+			}
+		],
+		"name": "editElectionRound",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -216,13 +305,13 @@ contract_abi = json.loads(
 				"type": "uint256"
 			},
 			{
-				"internalType": "bool",
-				"name": "isActive",
-				"type": "bool"
+				"internalType": "uint256",
+				"name": "candidateCount",
+				"type": "uint256"
 			},
 			{
 				"internalType": "uint256",
-				"name": "candidateCount",
+				"name": "absentVotes",
 				"type": "uint256"
 			}
 		],
@@ -294,9 +383,9 @@ contract_abi = json.loads(
 				"type": "uint256"
 			},
 			{
-				"internalType": "bool",
+				"internalType": "uint256",
 				"name": "",
-				"type": "bool"
+				"type": "uint256"
 			},
 			{
 				"internalType": "uint256",
@@ -367,104 +456,120 @@ account = w3.eth.account.from_key(private_key)
 contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
 
-@login_required
-def vote_view(request, round_id):
-    # Fetch election round and candidates
-    election_round = get_object_or_404(ElectionRound, id=round_id)
-    candidates = Candidate.objects.filter(election_round=election_round)
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
+from .pdf_utils import generate_results_pdf
+
+def download_pdf_results(request, round_id):
+    
+    # Ensure you are passing the request and round_id to the PDF generation function
+    return generate_results_pdf(request, round_id)
+
+
+@login_required(login_url="login_select")
+def index(request):
     user = request.user
-    has_voted = Vote.objects.filter(voter=user, election_round=election_round).exists()
-    # Check if the election round is active
-    if not election_round.is_active:
-        messages.warning(
-            request,
-            "This election round is not currently active. You cannot vote at this time.",
-        )
-        return render(
-            request,
-            "vote.html",
-            {
-                "election_round": election_round,
-                "candidates": candidates,
-                "form": None,
-                "has_voted": False,
-            },
-        )
-    # Check if the user has already voted
-    if has_voted:
-        messages.warning(request, "You have already voted in this election round.")
-        return render(
-            request,
-            "vote.html",
-            {
-                "election_round": election_round,
-                "candidates": candidates,
-                "form": None,
-                "has_voted": True,
-            },
-        )
-    # Handle the voting form submission
+    if user.is_staff:
+        return redirect("manage_users")
+
+    # Get current time and filter active and past election rounds
+    now = timezone.now()
+    active_rounds = ElectionRound.objects.filter(start_date__lte=now, end_date__gte=now)
+    all_rounds = ElectionRound.objects.filter(end_date__lt=now)
+    rounds_with_vote_status = []
+
+    # Prepare the data for active rounds and voting status
+    for round in active_rounds:
+        candidates = Candidate.objects.filter(election_round=round)
+        has_voted = Vote.objects.filter(voter=user, election_round=round).exists()
+        rounds_with_vote_status.append({
+            "name": round.name,
+            "id": round.id,
+            "end_date": round.end_date,
+            "user_has_voted": has_voted,
+            "candidates": candidates,
+        })
+
     if request.method == "POST":
-        form = VoteForm(request.POST, round_id=round_id)
-        if form.is_valid():
-            # Save the vote
-            vote = form.save(commit=False)
-            vote.election_round = election_round
-            vote.voter = user
-            vote.save()
-            # Encrypt voter name
-            key = os.urandom(32)
-            candidate_id = vote.candidate.id
-            encrypted_voter_name = encrypt_voter_name(user.username, key)
-            encrypted_voter_name_hex = encrypted_voter_name.hex()
-
-            try:
-                # Send vote to blockchain
-                tx = contract.functions.vote(
-                    election_round.id,  # Pass the round ID
-                    candidate_id,  # Candidate ID
-                    encrypted_voter_name_hex,  # Encrypted Voter Name (hex)
-                ).build_transaction(
-                    {
-                        "from": account.address,
-                        "nonce": w3.eth.get_transaction_count(account.address),
-                        "gas": 2000000,
-                        "gasPrice": w3.to_wei("50", "gwei"),
-                    }
+        round_id = request.POST.get("round_id")
+        candidate_id = request.POST.get("candidate_id")
+        
+        try:
+            # Fetch the election round and candidate
+            election_round = get_object_or_404(ElectionRound, id=round_id)
+            candidate = get_object_or_404(Candidate, id=candidate_id)
+            
+            # Check if the user has already voted
+            if not Vote.objects.filter(voter=user, election_round=election_round).exists():
+                # Create a vote in the database
+                vote = Vote.objects.create(
+                    voter=user, election_round=election_round, candidate=candidate
                 )
+                
+                # Encrypt the voter's name
+                key = os.urandom(32)
+                encrypted_voter_name = encrypt_voter_name(user.name, key)
+                encrypted_voter_name_hex = encrypted_voter_name.hex()
 
-                # Sign and send transaction
-                signed_tx = account.sign_transaction(tx)
-                tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-                tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-                # Success message with transaction details
-                messages.success(
-                    request,
-                    f"Thank you for voting! Transaction hash: {tx_hash.hex()} for candidate: {vote.candidate.name}",
-                )
-                return redirect("results", round_id=round_id)
-            except Exception as e:
-                # Handle blockchain transaction error
-                messages.error(
-                    request, f"Error processing vote on the blockchain: {str(e)}"
-                )
-                return redirect("vote_view", round_id=round_id)
-        else:
-            messages.error(request, "There was an issue with your submission.")
-    else:
+                # Blockchain interaction
+                account = w3.eth.account.from_key(private_key)
+                
+                # Retry logic for gas price and nonce management
+                success = False
+                attempts = 0
+                max_attempts = 5  # Number of retry attempts
+                while not success and attempts < max_attempts:
+                    try:
+                        nonce = w3.eth.get_transaction_count(account.address, 'pending')
+                        gas_price = w3.eth.gas_price  # Fetch current gas price
+                        gas_price = int(gas_price * 1.5)  # Increase the gas price by 50%
 
-        form = VoteForm(round_id=round_id)
+                        # Build and sign the transaction
+                        tx = contract.functions.vote(
+                            election_round.id, candidate.id, encrypted_voter_name_hex
+                        ).build_transaction({
+                            "from": account.address,
+                            "nonce": nonce,
+                            "gas": 2000000,
+                            "gasPrice": gas_price,
+                        })
+                        signed_tx = account.sign_transaction(tx)
+                        tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+                        
+                        # Wait for the transaction receipt
+                        receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=300)
+                        
+                        # If transaction succeeds
+                        success = True
+                        messages.success(request, "ขอบคุณที่โหวต")
+                    
+                    except Exception as e:
+                        logger.error(f"Blockchain transaction error: {str(e)}")
+                        attempts += 1
+                        if attempts == max_attempts:
+                            messages.error(request, "ไม่สามารถดำเนินการโหวตได้ ลองใหม่อีกครั้งในภายหลัง")
+                            return redirect("index")
+                        else:
+                            # If gas price is the issue, increase it for the next attempt
+                            gas_price = int(gas_price * 1.2)  # Increase gas price for the next attempt
+                
+            else:
+                messages.warning(request, "คุณได้โหวตรอบนี้ไปเเล้ว")
 
-    # Render the voting form
+            return redirect("index")
+
+        except Exception as e:
+            logger.error(f"Error processing vote or fetching data: {str(e)}")
+            messages.error(request, f"Error processing vote on the blockchain: {str(e)}")
+            return redirect("index")
+
     return render(
         request,
-        "vote.html",
-        {
-            "election_round": election_round,
-            "candidates": candidates,
-            "form": form,
-            "has_voted": False,
-        },
+        "index.html",
+        {"rounds": rounds_with_vote_status, "all_rounds": all_rounds},
     )
 
 
@@ -496,39 +601,60 @@ def results_view(request, round_id):
     )
 
 
-@login_required
-def index(request):
-    User = get_user_model()
-
-    if request.user.is_authenticated:
-        # If the user is staff, redirect to the manage_users page
-        if request.user.is_staff:
-            return redirect("manage_users")
-
-        # Normal users continue with the normal election round selection
-        active_rounds = ElectionRound.objects.filter(is_active=True)
-        all_rounds = ElectionRound.objects.filter(is_active=False)
-
-        return render(
-            request,
-            "round_selection.html",
-            {"rounds": active_rounds, "all_rounds": all_rounds},
-        )
-    else:
-        return redirect("facial_login")
-
-
 # staff section
 def staff_required(view_func):
     decorated_view_func = user_passes_test(lambda u: u.is_staff)(view_func)
     return decorated_view_func
 
 
+import csv
 # List and Create Views for CustomUser
 @staff_required
 def manage_users(request):
-    users = CustomUser.objects.all()
-    return render(request, "manage_users.html", {"users": users})
+    # Handle file upload and CSV import
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        csv_file = request.FILES['csv_file']
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, 'ไฟล์นี้ใช้งานไม่ได้')
+            return redirect('manage_users')
+
+        file_data = csv_file.read().decode("utf-8")
+        csv_data = csv.reader(file_data.splitlines())
+        next(csv_data)  # Skip the header
+
+        try:
+            for row in csv_data:
+                sid, name, last_name, branch, is_staff = row
+                # Add other fields as necessary, and ensure they match your model
+                
+                # Create user or handle duplicates
+                if not CustomUser.objects.filter(sid=sid).exists():
+                    CustomUser.objects.create(
+                        sid=sid,
+                        name=name,
+                        last_name=last_name,
+                        branch=branch,
+                        is_staff=False,
+                        is_active=False
+                    )
+            messages.success(request, 'เพิ่มผู้ใช้เรียบร้อยแล้ว')
+            
+        except Exception as e:
+            messages.error(request, f"Error processing CSV file: {str(e)}")
+            return redirect('manage_users')
+
+    # Your existing logic for displaying and managing users
+    search_query = request.GET.get("search_query", "")
+    if search_query:
+        users = CustomUser.objects.filter(name__icontains=search_query)
+    else:
+        users = CustomUser.objects.all()
+
+    return render(
+        request, 
+        'manage_users.html', 
+        {'users': users}
+    )
 
 
 # Edit and Delete View for CustomUser
@@ -541,8 +667,11 @@ def edit_user(request, user_id):
         user.name = request.POST["name"]
         user.last_name = request.POST["last_name"]
         user.branch = request.POST["branch"]
+        user.is_staff = "is_staff" in request.POST
+
         user.save()
-        return redirect("manage_users")  # Redirect back to the user management page
+        messages.success(request, "แก้ไขผู้ใช้รายนี้แล้ว")
+        return redirect("manage_users")
 
     return render(request, "edit_user.html", {"user": user})
 
@@ -551,13 +680,18 @@ def edit_user(request, user_id):
 def delete_user(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
     user.delete()
+    messages.success(request, "ลบผู้ใช้รายนี้เเล้ว")
     return redirect("manage_users")
 
 
 # round management
 @staff_required
 def manage_rounds(request):
-    rounds = ElectionRound.objects.all()
+    search_query = request.GET.get("search_query", "")
+    if search_query:
+        rounds = ElectionRound.objects.filter(name__icontains=search_query)
+    else:
+        rounds = ElectionRound.objects.all()
 
     if request.method == "POST":
         form = ElectionRoundForm(request.POST)
@@ -570,11 +704,16 @@ def manage_rounds(request):
                 print(
                     f"Election round added with transaction hash: {tx_receipt.transactionHash.hex()}"
                 )
+            messages.success(request, 'เพิ่มรอบการเลือกตั้งแล้ว.')
             return redirect("manage_rounds")
     else:
         form = ElectionRoundForm()
 
-    return render(request, "manage_rounds.html", {"rounds": rounds, "form": form})
+    return render(
+        request,
+        "manage_rounds.html",
+        {"rounds": rounds, "search_query": search_query, "form": form},
+    )
 
 
 @staff_required
@@ -585,9 +724,9 @@ def edit_round(request, round_id):
         form = ElectionRoundForm(request.POST, instance=round)
         if form.is_valid():
             form.save()
-            return redirect(
-                "manage_rounds"
-            )  # Redirect to manage_rounds after updating the round
+            messages.success(request, 'แก้ไขรอบการเลือกตั้งแล้ว.')
+            return redirect("manage_rounds")
+        
     else:
         form = ElectionRoundForm(instance=round)
 
@@ -598,17 +737,25 @@ def edit_round(request, round_id):
 def delete_round(request, round_id):
     round = get_object_or_404(ElectionRound, id=round_id)
     round.delete()
+    messages.success(request, "ลบรอบการเลือกตั้งเเล้ว")
     return redirect("manage_rounds")
 
 
 # manage candidate
 @staff_required
 def manage_candidates(request):
-    candidates = Candidate.objects.all()
-    election_rounds = ElectionRound.objects.all()  # Fetch all election rounds
+    election_rounds = ElectionRound.objects.all()
+    
+    search_query = request.GET.get("search_query", "")
+    if search_query:
+        candidates = Candidate.objects.filter(name__icontains=search_query)
+        
+    else:
+        
+        candidates = Candidate.objects.all()
 
     if request.method == "POST":
-        form = CandidateForm(request.POST)
+        form = CandidateForm(request.POST, request.FILES)
         if form.is_valid():
             candidate_obj = form.save()
             tx_receipt = add_candidate_to_blockchain(
@@ -618,6 +765,7 @@ def manage_candidates(request):
                 print(
                     f"Candidate added with transaction hash: {tx_receipt.transactionHash.hex()}"
                 )
+            messages.success(request, 'เพิ่มผู้สมัครแล้ว')
             return redirect("manage_candidates")
     else:
         form = CandidateForm()
@@ -625,7 +773,7 @@ def manage_candidates(request):
     return render(
         request,
         "manage_candidates.html",
-        {"candidates": candidates, "form": form, "election_rounds": election_rounds},
+        {"candidates": candidates, "form": form, "election_rounds": election_rounds, "search_query": search_query},
     )
 
 
@@ -633,38 +781,25 @@ def manage_candidates(request):
 def edit_candidate(request, candidate_id):
     candidate = get_object_or_404(Candidate, pk=candidate_id)
     if request.method == "POST":
-        form = CandidateForm(request.POST, instance=candidate)
+        form = CandidateForm(request.POST, request.FILES, instance=candidate)  
         if form.is_valid():
             form.save()
-            return redirect("manage_candidates")
-    else:
-        form = CandidateForm(instance=candidate)
+            messages.success(request, 'แก้ไขผู้สมัครแล้ว')
+            
+            return redirect(manage_candidates)
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-    return render(
-        request, "edit_candidate.html", {"form": form, "candidate": candidate}
-    )
+
 
 
 @staff_required
 def delete_candidate(request, candidate_id):
     candidate = get_object_or_404(Candidate, id=candidate_id)
     candidate.delete()
-    return redirect(
-        "manage_candidates"
-    )  # Redirect to manage_candidates after deleting the candidate
-
-
-@staff_required
-def get_user_data(request, user_id):
-    User = get_user_model()
-    user = get_object_or_404(User, id=user_id)
-    user_data = {
-        "sid": user.sid,
-        "name": user.name,
-        "last_name": user.last_name,
-        "branch": user.branch,
-    }
-    return JsonResponse(user_data)
+    messages.success(request, "ลบรายชื่อผู้สมัครแล้ว")
+    return redirect("manage_candidates")
 
 
 @staff_required
@@ -673,13 +808,13 @@ def add_user(request):
         form = CustomUserForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "User added successfully!")
-            return redirect("manage_users")  # Redirect to the user management page
+            messages.success(request, "เพิ่มผู้ใช้เรียบร้อยแล้ว")
+            return redirect("manage_users")
         else:
-            messages.error(request, "Error adding user. Please check the form data.")
+            messages.error(request, "เพิ่มผู้ใช้ไม่สำเร็จ")
     else:
         form = CustomUserForm()
-    return render(request, "add_user.html", {"form": form})
+    return render(request, {"form": form})
 
 
 @staff_required
@@ -687,22 +822,19 @@ def get_round_data(request, round_id):
     round = get_object_or_404(ElectionRound, id=round_id)
     data = {
         "name": round.name,
-        "start_date": round.start_date.strftime("%Y-%m-%d"),
-        "end_date": round.end_date.strftime("%Y-%m-%d"),
-        "is_active": round.is_active,
+        "start_date": round.start_date.strftime("%Y-%m-%dT%H:%M"),  # Correct format for datetime-local input
+        "end_date": round.end_date.strftime("%Y-%m-%dT%H:%M"),      # Correct format for datetime-local input
     }
     return JsonResponse(data)
 
 
-import logging
-
-logger = logging.getLogger(__name__)
 
 @staff_required
 def get_candidate_data(request, candidate_id):
     try:
         candidate = get_object_or_404(Candidate, id=candidate_id)
         data = {
+            "number": candidate.number,
             "name": candidate.name,
             "last_name": candidate.last_name,
             "year": candidate.year,
@@ -717,9 +849,108 @@ def get_candidate_data(request, candidate_id):
         return JsonResponse({"error": "Data fetch failed"}, status=500)
 
 
-
 @staff_required
 def get_election_rounds(request):
     rounds = ElectionRound.objects.all()
     rounds_data = [{"id": round.id, "name": round.name} for round in rounds]
     return JsonResponse({"election_rounds": rounds_data})
+
+
+@staff_required
+def get_user_data(request, user_id):
+    User = get_user_model()
+    user = get_object_or_404(User, id=user_id)
+    user_data = {
+        "sid": user.sid,
+        "name": user.name,
+        "last_name": user.last_name,
+        "branch": user.branch,
+        "is_staff": user.is_staff,
+    }
+    return JsonResponse(user_data)
+
+
+
+from django.db.models import Count
+
+@staff_required
+def manage_votes(request):
+    # Perform search based on candidate name, if provided
+    search_query = request.GET.get("search_query", "")
+    if search_query:
+        # Filter by candidate name
+        rounds = ElectionRound.objects.filter(candidates__name__icontains=search_query).distinct()
+    else:
+        # Get all rounds with aggregated vote counts for each candidate
+        rounds = ElectionRound.objects.prefetch_related('candidates').all()
+
+    return render(
+        request, 
+        "manage_votes.html", 
+        {"rounds": rounds, "search_query": search_query}
+    )
+
+
+@staff_required
+def get_round_votes(request, round_id):
+    try:
+        # Get the election round by ID
+        election_round = get_object_or_404(ElectionRound, id=round_id)
+        
+        # Fetch candidates and their votes from the blockchain
+        blockchain_candidates = get_candidates_from_blockchain(round_id)
+        
+        vote_data = []
+        total_votes = 0  # Track total votes for the round
+        
+        for candidate_data in blockchain_candidates:
+            candidate_id, candidate_name, candidate_votes = candidate_data
+            
+            # Try to find candidate in the local database, or log an error
+            try:
+                candidate = Candidate.objects.get(id=candidate_id)
+            except Candidate.DoesNotExist:
+                print(f"Error: Candidate with ID {candidate_id} does not exist.")
+                continue
+
+            total_votes += candidate_votes  # Sum up the votes for each candidate
+            
+            vote_data.append({
+                'name': candidate.name,
+                'last_name': candidate.last_name,
+                'total_votes': candidate_votes  # From the blockchain data
+            })
+        
+        # Return the round details with the total votes, start date, and end date
+        return JsonResponse({
+            'vote_data': vote_data,
+            'total_votes': total_votes,
+            'start_date': election_round.start_date.strftime('%Y-%m-%d %H:%M:%S'),
+            'end_date': election_round.end_date.strftime('%Y-%m-%d %H:%M:%S'),
+        }, status=200)
+    
+    except Exception as e:
+        print(f"Error fetching round votes: {e}")
+        return JsonResponse({'error': 'Failed to load votes'}, status=500)
+
+
+
+
+
+def custom_logout(request):
+    logout(request)
+    return redirect("login_select")
+
+def admin_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user, backend=backend)
+            return redirect('index')  # Redirect to the admin dashboard
+        else:
+            return render(request, 'admin_login.html', {'error': 'Invalid credentials'})
+
+    return render(request, 'admin_login.html')

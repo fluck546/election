@@ -33,4 +33,4 @@ class ElectionRoundForm(forms.ModelForm):
 class CandidateForm(forms.ModelForm):
     class Meta:
         model = Candidate
-        fields = ['name', 'last_name', 'detail', 'branch', 'year', 'election_round']
+        fields = ['number','name', 'last_name', 'detail', 'branch', 'year', 'election_round', 'picture']
