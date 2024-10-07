@@ -25,14 +25,16 @@
     </button>
   </form>
   <div class="overflow-x-auto mb-4">
-
     <!-- DataTable -->
     <table id="userTable" class="dataTable min-w-full bg-white border border-gray-300 rounded-lg mt-10">
       <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
         <tr>
           <th class="py-3 px-6 text-left">รหัสนักศึกษา</th>
+          <th class="py-3 px-6 text-left">อีเมล</th>
           <th class="py-3 px-6 text-left">ชื่อ-สกุล</th>
           <th class="py-3 px-6 text-left">สาขา</th>
+          <th class="py-3 px-6 text-left">สถานะผู้ใช้ (Active)</th> <!-- Added is_active column -->
+          <th class="py-3 px-6 text-left">สถานะเจ้าหน้าที่ (Staff)</th> <!-- Added is_staff column -->
           <th class="py-3 px-6 text-center">Actions</th>
         </tr>
       </thead>
@@ -40,8 +42,11 @@
         {% for user in users %}
         <tr class="border-b border-gray-200 hover:bg-gray-100">
           <td class="py-3 px-6">{{ user.sid }}</td>
+          <td class="py-3 px-6">{{ user.email }}</td>
           <td class="py-3 px-6">{{ user.name }} {{ user.last_name }}</td>
           <td class="py-3 px-6">{{ user.branch }}</td>
+          <td class="py-3 px-6">{{ user.is_active|yesno:"ใช่,ไม่" }}</td> <!-- Display is_active -->
+          <td class="py-3 px-6">{{ user.is_staff|yesno:"ใช่,ไม่" }}</td> <!-- Display is_staff -->
           <td class="py-3 px-6 text-center">
             <button onclick="openEditUserModal('{{ user.id }}')" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded">Edit</button>
             <button onclick="confirmDeleteUser('{{ user.id }}')" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded ml-2">Delete</button>
@@ -51,8 +56,7 @@
       </tbody>
     </table>
   </div>
-</div>
-
+  
 <!-- Add User Modal -->
 <div id="addUserModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden modal">
   <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
@@ -75,6 +79,10 @@
       <div class="mb-4">
         <label for="branch" class="block text-gray-700">สาขา:</label>
         <input type="text" id="branch" name="branch" class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full" />
+      </div>
+      <div class="mb-4">
+        <label for="email" class="block text-gray-700">อีเมล:</label>
+        <input type="email" id="email" name="email" class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full" />
       </div>
       <div class="mb-4">
         <label for="is_staff" class="block text-gray-700">Is Staff:</label>
@@ -135,6 +143,15 @@ class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center 
               />
           </div>
           <div class="mb-4">
+            <label for="edit_email" class="block text-gray-700">อีเมล:</label>
+            <input
+              type="email"
+              id="edit_email"
+              name="email"
+              class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"
+            />
+          </div>
+          <div class="mb-4">
               <label for="edit_is_staff" class="block text-gray-700">Is Staff:</label>
               <input
                 type="checkbox"
@@ -168,7 +185,7 @@ class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center 
   function confirmDeleteUser(userId) {
     Swal.fire({
       title: 'ลบข้อมูล',
-      text: "จะลบจริง?",
+      text: "จะลบหรือไม่?",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -204,6 +221,7 @@ class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center 
         document.getElementById("edit_last_name").value = data.last_name;
         document.getElementById("edit_branch").value = data.branch;
         document.getElementById("edit_is_staff").checked = data.is_staff;
+        document.getElementById("edit_email").value = data.email;
         document.getElementById("editUserForm").action = `/edit_user/${userId}/`;
         document.getElementById("editUserModal").classList.remove("hidden");
       })

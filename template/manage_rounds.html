@@ -4,29 +4,29 @@
 
 {% block content %}
 <div class="bg-white p-6 rounded-lg shadow-md">
-  <h1 class="text-2xl font-bold mb-6">Manage Election Rounds</h1>
-  <button class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded" onclick="openAddRoundModal()">Add New Round</button>
+  <h1 class="text-2xl font-bold mb-6">จัดการรอบการเลือกตั้ง</h1>
+  <button class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded" onclick="openAddRoundModal()">เพิ่มรอบการเลือกตั้ง</button>
 
   <!-- Add Round Modal -->
 <div id="addRoundModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden modal">
   <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
-    <h2 class="text-xl font-bold mb-4">Add New Round</h2>
-    <form method="POST" class="space-y-4">
+    <h2 class="text-xl font-bold mb-4">เพิ่มผู้สมัครคนใหม่</h2>
+    <form method="POST" class="space-y-4" onsubmit="handleSubmit(this)">
       {% csrf_token %}
       
       <!-- Change input type from text to textarea for Round Name -->
-      <label for="name" class="block text-gray-700">Round Name:</label>
+      <label for="name" class="block text-gray-700">ชื่อรอบ:</label>
       <textarea id="name" name="name" rows="3" class="bg-blue-100 border border-gray-300 rounded-md py-2 px-3 w-full"></textarea>
 
-      <label for="start_date" class="block text-gray-700">Start Date and Time:</label>
+      <label for="start_date" class="block text-gray-700">วันและเวลาที่เริ่มเปิดหีบ:</label>
       <input type="datetime-local" id="start_date" name="start_date" class="bg-blue-100 border border-gray-300 rounded-md py-2 px-3 w-full" />
 
-      <label for="end_date" class="block text-gray-700">End Date and Time:</label>
+      <label for="end_date" class="block text-gray-700">วันและเวลาที่ปิดหีบ:</label>
       <input type="datetime-local" id="end_date" name="end_date" class="bg-blue-100 border border-gray-300 rounded-md py-2 px-3 w-full" />
 
       <div class="flex justify-between">
-        <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="closeAddRoundModal()">Cancel</button>
-        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Add Round</button>
+        <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="closeAddRoundModal()">ยกเลิก</button>
+        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">เพิ่มรอบการเลือกตั้ง</button>
       </div>
     </form>
   </div>
@@ -35,37 +35,37 @@
   <!-- Edit Round Modal -->
 <div id="editRoundModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden modal">
   <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
-    <h2 class="text-xl font-bold mb-4">Edit Round</h2>
-    <form method="POST" action="" id="editRoundForm">
+    <h2 class="text-xl font-bold mb-4">แก้ไขรอบการเลือกตั้ง</h2>
+    <form method="POST" action="" id="editRoundForm" onsubmit="handleSubmit(this)">
       {% csrf_token %}
       <input type="hidden" id="edit_round_id" name="round_id" />
 
       <!-- Changed input to textarea for Round Name -->
       <div class="mb-4">
-        <label for="edit_name" class="block text-gray-700">Round Name:</label>
+        <label for="edit_name" class="block text-gray-700">ชื่อรอบ:</label>
         <textarea id="edit_name" name="name" rows="3" class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full"></textarea>
       </div>
 
       <div class="mb-4">
-        <label for="edit_start_date" class="block text-gray-700">Start Date and Time:</label>
+        <label for="edit_start_date" class="block text-gray-700">วันและเวลาที่เริ่มเปิดหีบ:</label>
         <input type="datetime-local" id="edit_start_date" name="start_date" class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full" />
       </div>
 
       <div class="mb-4">
-        <label for="edit_end_date" class="block text-gray-700">End Date and Time:</label>
+        <label for="edit_end_date" class="block text-gray-700">วันและเวลาที่ปิดหีบ:</label>
         <input type="datetime-local" id="edit_end_date" name="end_date" class="bg-gray-100 border border-gray-300 rounded-md py-2 px-3 w-full" />
       </div>
 
       <div class="flex justify-between">
-        <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="closeEditRoundModal()">Cancel</button>
-        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Save Changes</button>
+        <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="closeEditRoundModal()">ยกเลิก</button>
+        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">บันทึก</button>
       </div>
     </form>
   </div>
 </div>
 
   <!-- Existing Rounds Table -->
-  <h2 class="text-xl font-semibold mt-10 mb-4">Existing Election Rounds</h2>
+ 
   <div class="overflow-x-auto">
   
 
@@ -73,9 +73,9 @@
     <table id="roundsTable" class="dataTable min-w-full bg-white border border-gray-300 rounded-lg">
       <thead>
         <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-          <th class="py-3 px-6 text-left">Name</th>
-          <th class="py-3 px-6 text-left">Start Date</th>
-          <th class="py-3 px-6 text-left">End Date</th>
+          <th class="py-3 px-6 text-left">ชื่อรอบ</th>
+          <th class="py-3 px-6 text-left">วันและเวลาที่เริ่มเปิดหีบ</th>
+          <th class="py-3 px-6 text-left">วันและเวลาที่ปิดหีบ</th>
           <th class="py-3 px-6 text-center">Actions</th>
         </tr>
       </thead>
@@ -86,8 +86,8 @@
           <td class="py-3 px-6 text-left">{{ round.start_date }}</td>
           <td class="py-3 px-6 text-left">{{ round.end_date }}</td>
           <td class="py-3 px-6 text-center">
-            <a href="#" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded" onclick="openEditRoundModal('{{ round.id }}')">Edit</a>
-            <button onclick="confirmDeleteRound('{{ round.id }}')" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded ml-2">Delete</a>
+            <a href="#" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded" onclick="openEditRoundModal('{{ round.id }}')">แก้ไข</a>
+            <button onclick="confirmDeleteRound('{{ round.id }}')" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded ml-2">ลบ</a>
           </td>
         </tr>
         {% endfor %}
@@ -102,7 +102,7 @@
   function confirmDeleteRound(roundID) {
     Swal.fire({
       title: 'ลบข้อมูล',
-      text: "จะลบจริง?",
+      text: "จะลบหรือไม่?",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -157,5 +157,14 @@
   $(document).ready(function () {
     $(".dataTable").DataTable();
   });
+  function handleSubmit(form) {
+    // Disable the submit button and change its text
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.textContent = 'กำลังโหลด...';
+    
+    // Optional: Add a class to indicate loading (if needed for styling)
+    submitButton.classList.add('cursor-not-allowed', 'opacity-50');
+  }
 </script>
 {% endblock %}

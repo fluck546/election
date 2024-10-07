@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Facial Recognition Login</title>
+    <title>ล็อคอินผ่านระบบสแกนใบหน้า</title>
     
     <!-- Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -37,7 +37,7 @@
             <canvas id="canvas" width="320" height="240" class="hidden"></canvas>
 
             <!-- Login Form -->
-            <form id="login-form" method="POST" action="{% url 'facial_login' %}" enctype="multipart/form-data">
+            <form id="login-form" method="POST" action="{% url 'facial_login' %}" enctype="multipart/form-data" onsubmit="handleSubmit(this)">
                 {% csrf_token %}
                 <input type="hidden" name="image" id="image">
                 <div class="flex justify-center mb-4">
@@ -91,14 +91,14 @@
         {% for message in messages %}
           {% if message.tags == 'success' %}
             Swal.fire({
-              title: 'Success!',
+              title: 'สำเร็จ!',
               text: "{{ message }}",
               icon: 'success',
               confirmButtonText: 'OK'
             });
           {% elif message.tags == 'error' %}
             Swal.fire({
-              title: 'Error!',
+              title: 'ล้มเหลว!',
               text: "{{ message }}",
               icon: 'error',
               confirmButtonText: 'OK'
@@ -106,6 +106,15 @@
           {% endif %}
         {% endfor %}
       {% endif %}
+      function handleSubmit(form) {
+    // Disable the submit button and change its text
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.textContent = 'กำลังโหลด...';
+    
+    // Optional: Add a class to indicate loading (if needed for styling)
+    submitButton.classList.add('cursor-not-allowed', 'opacity-50');
+  }
     </script>
 </body>
 </html>

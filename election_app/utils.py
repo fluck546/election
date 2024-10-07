@@ -1,54 +1,27 @@
 from web3 import Web3
-from .models import ElectionRound, Candidate
+
 import os
 import json
 from django.utils import timezone
+from web3.exceptions import TransactionNotFound, TimeExhausted
+import configparser
 
 
-# # Define the path for the configuration file
-# config_file_path = os.path.join(os.path.dirname(__file__), 'blockchain_config.json')
+config = configparser.ConfigParser()
+config.read('config.ini')
 
-# def initialize_config():
-#     """
-#     Check if the config file exists. If not, prompt the user to input the private key and account address.
-#     """
-#     if not os.path.exists(config_file_path):
-#         # Prompt the user for the account details
-#         account_address = input("Enter your Ethereum account address: ")
-#         private_key = input("Enter your Ethereum private key: ")
+# Accessing a value
+private_key_value = str(config['settings']['private_key']).strip()
 
-#         # Save the details in the configuration file
-#         with open(config_file_path, 'w') as config_file:
-#             config_data = {
-#                 'account_address': account_address,
-#                 'private_key': private_key
-#             }
-#             json.dump(config_data, config_file)
 
-#         return config_data
-#     else:
-#         # Load the existing configuration
-#         with open(config_file_path, 'r') as config_file:
-#             return json.load(config_file)
 
-# # Load the configuration data (account address, private key)
-# config_data = initialize_config()
-
-# # Extract account address and private key
-# account_address = config_data.get('account_address')
-# private_key = config_data.get('private_key')
-
-# # Ethereum connection details
-# infura_url = os.getenv('INFURA_URL','https://holesky.infura.io/v3/8829b151914a40b29dbfb359287f73b3')
-# contract_address = os.getenv('CONTRACT_ADDRESS','0x8A00c34d415D2b13eEFE0Cd85d8d0A9dAa4457b2')
-
-# contract_abi = json.loads("""...""")  # Keep the ABI as it is
 
 # Load environment variables
 infura_url = os.getenv('INFURA_URL','https://holesky.infura.io/v3/8829b151914a40b29dbfb359287f73b3')
-private_key = os.getenv('PRIVATE_KEY','b228a7e0227f5af609b665efba1bb997d85f51666dcb2c8afe4a61528a75de6d')
-contract_address = os.getenv('CONTRACT_ADDRESS','0x8A00c34d415D2b13eEFE0Cd85d8d0A9dAa4457b2')
-account_address = os.getenv('ACCOUNT_ADDRESS','0xcAFa11cB0cf830426D66D868653f6FdC0128bb3C')
+w3 = Web3(Web3.HTTPProvider(infura_url))
+private_key = os.getenv('PRIVATE_KEY',private_key_value)
+contract_address = os.getenv('CONTRACT_ADDRESS','0xb5a9530F9be3F077492Df27241F7c8fAD47cf53d')
+account_address = w3.eth.account.from_key(private_key)
 
 contract_abi = json.loads("""[
 	{
@@ -59,9 +32,34 @@ contract_abi = json.loads("""[
 				"type": "uint256"
 			},
 			{
+				"internalType": "uint256",
+				"name": "_candidateId",
+				"type": "uint256"
+			},
+			{
 				"internalType": "string",
 				"name": "_name",
 				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_lastName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_detail",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_branch",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_year",
+				"type": "uint256"
 			}
 		],
 		"name": "addCandidate",
@@ -71,6 +69,11 @@ contract_abi = json.loads("""[
 	},
 	{
 		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_roundId",
+				"type": "uint256"
+			},
 			{
 				"internalType": "string",
 				"name": "_name",
@@ -139,6 +142,26 @@ contract_abi = json.loads("""[
 				"internalType": "string",
 				"name": "_newName",
 				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_newLastName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_newDetail",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_newBranch",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_newYear",
+				"type": "uint256"
 			}
 		],
 		"name": "editCandidate",
@@ -252,6 +275,26 @@ contract_abi = json.loads("""[
 				"internalType": "string",
 				"name": "name",
 				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "lastName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "detail",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "branch",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "year",
+				"type": "uint256"
 			},
 			{
 				"internalType": "uint256",
@@ -448,12 +491,12 @@ contract_abi = json.loads("""[
 ]""")
 
 # Connect to Ethereum node
-w3 = Web3(Web3.HTTPProvider(infura_url))
+
 contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 account = w3.eth.account.from_key(private_key)
 
 
-def add_election_round_to_blockchain(name, start_date, end_date):
+def add_election_round_to_blockchain(roundID,name, start_date, end_date):
     attempts = 0
     max_attempts = 5  # Maximum number of retry attempts
     gas_price = w3.to_wei('50', 'gwei')  # Initial gas price
@@ -465,6 +508,7 @@ def add_election_round_to_blockchain(name, start_date, end_date):
             nonce = w3.eth.get_transaction_count(account.address, 'pending')
 
             tx = contract.functions.addElectionRound(
+                roundID,
                 name,
                 int(start_date_utc.timestamp()),
                 int(end_date_utc.timestamp())
@@ -476,7 +520,7 @@ def add_election_round_to_blockchain(name, start_date, end_date):
             })
 
             signed_tx = account.sign_transaction(tx)
-            tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
             # If transaction succeeds, return receipt
@@ -492,7 +536,7 @@ def add_election_round_to_blockchain(name, start_date, end_date):
     return None
 
 
-def add_candidate_to_blockchain(round_id, name):
+def add_candidate_to_blockchain(round_id,candidate_id, name, last_name, detail, branch, year):
     attempts = 0
     max_attempts = 5  # Maximum retry attempts
     gas_price = w3.to_wei('50', 'gwei')  # Initial gas price
@@ -503,7 +547,12 @@ def add_candidate_to_blockchain(round_id, name):
 
             tx = contract.functions.addCandidate(
                 round_id,
-                name
+                candidate_id,
+                name,
+                last_name,
+                detail,
+                branch,
+                year
             ).build_transaction({
                 'from': account.address,
                 'nonce': nonce,
@@ -512,7 +561,7 @@ def add_candidate_to_blockchain(round_id, name):
             })
 
             signed_tx = w3.eth.account.sign_transaction(tx, private_key)
-            tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
             # If transaction succeeds, return receipt
@@ -527,3 +576,110 @@ def add_candidate_to_blockchain(round_id, name):
     print("Max retry attempts reached for adding candidate to blockchain.")
     return None
 
+
+def edit_candidate_on_blockchain(round_id, candidate_id, new_name, new_last_name, new_detail, new_branch, new_year):
+    attempts = 0
+    max_attempts = 5  # Maximum retry attempts
+    gas_price = w3.to_wei('50', 'gwei')  # Initial gas price
+
+    while attempts < max_attempts:
+        try:
+            nonce = w3.eth.get_transaction_count(account.address, 'pending')
+
+            # Build the transaction for editing the candidate details
+            tx = contract.functions.editCandidate(
+                round_id,
+                candidate_id,
+                new_name,
+                new_last_name,
+                new_detail,
+                new_branch,
+                new_year
+            ).build_transaction({
+                'from': account.address,
+                'nonce': nonce,
+                'gas': 2000000,  # Adjust gas limit if needed
+                'gasPrice': gas_price
+            })
+
+            # Sign the transaction
+            signed_tx = w3.eth.account.sign_transaction(tx, private_key)
+
+            # Send the signed transaction
+            tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+
+            # Wait for the transaction receipt
+            tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+
+            # If successful, return the transaction receipt
+            return tx_receipt
+
+        except (TransactionNotFound, TimeExhausted) as tx_error:
+            # Specific handling for known exceptions
+            print(f"Transaction error (attempt {attempts + 1}): {tx_error}")
+            attempts += 1
+
+        except Exception as e:
+            # Handle any other exceptions
+            print(f"Error editing candidate on blockchain (attempt {attempts + 1}): {e}")
+            attempts += 1
+
+        # Increase gas price by 20% for the next attempt
+        gas_price = int(gas_price * 1.2)
+        print(f"Increasing gas price for next attempt: {w3.from_wei(gas_price, 'gwei')} gwei")
+
+    # If all attempts fail, return None
+    print("Max retry attempts reached for editing candidate on blockchain.")
+    return None
+
+def edit_election_round_on_blockchain(round_id, new_name, new_start_date, new_end_date):
+    attempts = 0
+    max_attempts = 5  # Maximum retry attempts
+    gas_price = w3.to_wei('50', 'gwei')  # Initial gas price
+
+    while attempts < max_attempts:
+        try:
+            nonce = w3.eth.get_transaction_count(account.address, 'pending')
+
+            # Build the transaction for editing the election round details
+            tx = contract.functions.editElectionRound(
+                round_id,
+                new_name,
+                new_start_date,
+                new_end_date
+            ).build_transaction({
+                'from': account.address,
+                'nonce': nonce,
+                'gas': 2000000,  # Adjust gas limit if needed
+                'gasPrice': gas_price
+            })
+
+            # Sign the transaction
+            signed_tx = w3.eth.account.sign_transaction(tx, private_key)
+
+            # Send the signed transaction
+            tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+
+            # Wait for the transaction receipt
+            tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+
+            # If successful, return the transaction receipt
+            return tx_receipt
+
+        except (TransactionNotFound, TimeExhausted) as tx_error:
+            # Specific handling for known exceptions
+            print(f"Transaction error (attempt {attempts + 1}): {tx_error}")
+            attempts += 1
+
+        except Exception as e:
+            # Handle any other exceptions
+            print(f"Error editing election round on blockchain (attempt {attempts + 1}): {e}")
+            attempts += 1
+
+        # Increase gas price by 20% for the next attempt
+        gas_price = int(gas_price * 1.2)
+        print(f"Increasing gas price for next attempt: {w3.from_wei(gas_price, 'gwei')} gwei")
+
+    # If all attempts fail, return None
+    print("Max retry attempts reached for editing election round on blockchain.")
+    return None

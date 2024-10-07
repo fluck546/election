@@ -31,10 +31,11 @@ class Candidate(models.Model):
 
 
 class Vote(models.Model):
-    voter = models.ForeignKey(User, on_delete=models.CASCADE) 
-    election_round = models.ForeignKey("ElectionRound", on_delete=models.CASCADE)
-    candidate = models.ForeignKey("Candidate", on_delete=models.CASCADE)
+    voter = models.ForeignKey(User, on_delete=models.CASCADE)
+    election_round = models.ForeignKey(ElectionRound, on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate, on_delete=models.SET_NULL, null=True, blank=True)  # Allow NULL for absent votes
     timestamp = models.DateTimeField(auto_now_add=True)
+
 
     def __str__(self):
         return f"{self.voter} voted for {self.candidate}"

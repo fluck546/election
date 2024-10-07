@@ -43,5 +43,6 @@ urlpatterns = [
     path('download_pdf_results/<int:round_id>/', views.download_pdf_results, name='download_pdf_results'),
      path('generate_results/', views.results_selection_page, name='generate_results'),
      path('get_round_votes/<int:round_id>/', views.get_round_votes, name='get_round_votes'),
+     
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

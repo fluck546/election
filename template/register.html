@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Register with Face Recognition</title>
+    <title>ลงทะเบียนครั้งแรก</title>
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
@@ -20,7 +20,7 @@
     >
       <div class="bg-white shadow-lg p-6 w-full max-w-lg rounded">
         <h1 class="text-center text-2xl font-bold mb-6">
-          Register with Face Recognition
+          ลงทะเบียนครั้งแรก
         </h1>
 
         <!-- Error message display -->
@@ -30,20 +30,21 @@
         </div>
         {% endif %}
 
-        <!-- Form to capture sid, name, last_name, branch, and facial data -->
+        <!-- Form to capture sid, name, last_name, branch, email, otp, and facial data -->
         <form
           id="register-form"
           method="POST"
           action="{% url 'register' %}"
           enctype="multipart/form-data"
           class="space-y-6"
+          onsubmit="handleSubmit(this)"
         >
           {% csrf_token %}
 
           <!-- SID Field -->
           <div>
             <label for="sid" class="block text-gray-700 font-medium"
-              >SID:</label
+              >รหัสนักศึกษา:</label
             >
             <input
               type="text"
@@ -57,7 +58,7 @@
           <!-- Name Field -->
           <div>
             <label for="name" class="block text-gray-700 font-medium"
-              >Name:</label
+              >ชื่อ:</label
             >
             <input
               type="text"
@@ -71,7 +72,7 @@
           <!-- Last Name Field -->
           <div>
             <label for="last_name" class="block text-gray-700 font-medium"
-              >Last Name:</label
+              >นามสกุล:</label
             >
             <input
               type="text"
@@ -85,7 +86,7 @@
           <!-- Branch Field -->
           <div>
             <label for="branch" class="block text-gray-700 font-medium"
-              >Branch:</label
+              >สาขา:</label
             >
             <input
               type="text"
@@ -96,8 +97,41 @@
             />
           </div>
 
+          <!-- Email Field with Send OTP Button -->
+          <div class="flex items-center">
+            <div class="w-full">
+              <label for="email" class="block text-gray-700 font-medium">อีเมล:</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="bg-blue-100 border border-gray-300 text-gray-900 rounded-lg py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required
+              />
+            </div>
+            <button
+              type="button"
+              id="send-otp"
+              class="ml-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+            >
+              ส่ง OTP
+            </button>
+          </div>
+
+          <!-- OTP Field -->
+          <div>
+            <label for="otp" class="block text-gray-700 font-medium">OTP:</label>
+            <input
+              type="text"
+              id="otp"
+              name="otp"
+              class="bg-blue-100 border border-gray-300 text-gray-900 rounded-lg py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+              required
+            />
+          </div>
+
           <!-- Capture Your Face -->
-          <h2 class="text-center text-lg font-semibold">Capture Your Face</h2>
+          
           <div class="flex justify-center mb-3">
             <!-- Video feed to capture face -->
             <video
@@ -119,7 +153,7 @@
               id="capture"
               class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
             >
-              Capture Photo
+              ถ่ายภาพ
             </button>
           </div>
 
@@ -137,7 +171,7 @@
               type="submit"
               class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded w-full max-w-xs"
             >
-              Register
+              ลงทะเบียน
             </button>
           </div>
         </form>
@@ -175,18 +209,54 @@
         capturedImage.src = dataURL;
         capturedImage.classList.remove("hidden");
         video.classList.add("hidden");
-        {% if messages %}
+      });
+
+      // Handle sending OTP
+      document.getElementById("send-otp").addEventListener("click", function () {
+        const email = document.getElementById("email").value;
+
+        if (!email) {
+          Swal.fire("เกิดข้อผิดพลาด", "กรุณาใส่ email ก่อน", "error");
+          return;
+        }
+
+        // Example of sending OTP via an AJAX request (you need to implement this on the server-side)
+        fetch("{% url 'send_otp' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // "X-CSRFToken": "{{ csrf_token }}",
+            'X-CSRFToken': getCookie('csrftoken'),  // Function to retrieve CSRF token
+
+          },
+          body: JSON.stringify({ email: email }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire("สำเร็จ", "OTP ได้ถูกส่งไปยัง email ของคุณแล้ว", "success");
+          } else {
+            Swal.fire("Error", data.message, "error");
+          }
+        })
+        .catch(error => {
+          console.error("Error sending OTP:", error);
+          Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถส่ง OTP ได้", "error");
+        });
+      });
+
+      {% if messages %}
         {% for message in messages %}
           {% if message.tags == 'success' %}
             Swal.fire({
-              title: 'Success!',
+              title: 'สำเร็จ!',
               text: "{{ message }}",
               icon: 'success',
               confirmButtonText: 'OK'
             });
           {% elif message.tags == 'error' %}
             Swal.fire({
-              title: 'Error!',
+              title: 'ล้มเหลว!',
               text: "{{ message }}",
               icon: 'error',
               confirmButtonText: 'OK'
@@ -194,7 +264,31 @@
           {% endif %}
         {% endfor %}
       {% endif %}
-      });
+      // Function to retrieve CSRF token from cookies
+      function getCookie(name) {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== '') {
+              const cookies = document.cookie.split(';');
+              for (let cookie of cookies) {
+                  cookie = cookie.trim();
+                  // Does this cookie string begin with the name we want?
+                  if (cookie.startsWith(name + '=')) {
+                      cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                      break;
+                  }
+              }
+          }
+          return cookieValue;
+      }
+      function handleSubmit(form) {
+      // Disable the submit button and change its text
+      const submitButton = form.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.textContent = 'กำลังโหลด...';
+    
+    // Optional: Add a class to indicate loading (if needed for styling)
+      submitButton.classList.add('cursor-not-allowed', 'opacity-50');
+     }
     </script>
   </body>
 </html>

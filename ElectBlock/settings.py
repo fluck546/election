@@ -1,5 +1,19 @@
 from pathlib import Path
 import os
+import sys
+import locale
+if sys.platform == "win32":
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'sentotpnoreply@gmail.com'
+EMAIL_HOST_PASSWORD = 'trqc gtdm ccap usvr'
+DEFAULT_FROM_EMAIL = 'sentotpnoreply@gmail.com'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -83,11 +97,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
+USE_TZ = True
+
 TIME_ZONE = 'Asia/Bangkok'
 
 USE_I18N = True
 
-USE_TZ = True
+
 
 STATIC_URL = 'static/'
 
@@ -106,6 +122,7 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': 'debug.log',
+            'encoding': 'utf-8',  # Specify UTF-8 encoding
         },
     },
     'loggers': {

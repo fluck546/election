@@ -24,7 +24,7 @@
 
   <!-- List of rounds -->
   <div class="overflow-x-auto">
-    <table class="min-w-full bg-white border border-gray-300 rounded-lg">
+    <table class="dataTable min-w-full bg-white border border-gray-300 rounded-lg">
       <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
         <tr>
           <th class="py-3 px-6 text-left">ชื่อรอบ</th>
@@ -72,16 +72,17 @@
       </tbody>
     </table>
     
-    <!-- Add the additional section for total votes, start, and end date -->
+    <!-- Add the additional section for total votes, start, end date, and absent votes -->
     <div class="mt-4">
       <p id="totalVotes" class="font-bold">โหวตรวม: </p>
+      <p id="absentVotes" class="font-bold text-red-500">ไม่ประสงค์ลงคะแนน: </p>
       <p id="startDate" class="text-gray-600">วันและเวลาที่เริ่มเปิดหีบ: </p>
       <p id="endDate" class="text-gray-600">วันและเวลาที่ปิดหีบ: </p>
     </div>
 
     <div class="mt-4 flex justify-between">
-      <button class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="closeVoteModal()">Close</button>
-      <button id="generatePdfButton" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded" onclick="generatePdf({{ round.id }})">ดาวน์โหลดเอกสาร</button>
+      <button class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="closeVoteModal()">ปิด</button>
+      <button id="generatePdfButton" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded" onclick="generatePdf('{{ round.id }}')">ดาวน์โหลดเอกสาร</button>
 
     </div>
   </div>
@@ -99,7 +100,7 @@
   }
 
   function openVoteModal(roundId) {
-    console.log("Round ID:", roundId);
+  console.log("Round ID:", roundId);
   fetch(`/get_round_votes/${roundId}/`)
     .then((response) => response.json())
     .then((data) => {
@@ -111,12 +112,19 @@
             <td>${vote.total_votes}</td>
           </tr>
         `).join('');
-
-        document.getElementById('voteDetailsBody').innerHTML = voteDetails;
-        document.getElementById('totalVotes').textContent = `Total Votes: ${data.total_votes}`;
-        document.getElementById('startDate').textContent = `Start Date: ${data.start_date}`;
-        document.getElementById('endDate').textContent = `End Date: ${data.end_date}`;
         
+        // Insert candidate vote details
+        document.getElementById('voteDetailsBody').innerHTML = voteDetails;
+        
+        // Display total votes
+        document.getElementById('totalVotes').textContent = `โหวตรวม: ${data.total_votes}`;
+        
+        // Display absent votes
+        document.getElementById('absentVotes').textContent = `ไม่ประสงค์ลงคะแนน: ${data.absent_votes}`;
+        
+        // Update start and end dates
+        document.getElementById('startDate').textContent = `วันและเวลาที่เริ่มเปิดหีบ: ${data.start_date}`;
+        document.getElementById('endDate').textContent = `วันและเวลาที่ปิดหีบ: ${data.end_date}`;
       }
       document.getElementById('generatePdfButton').setAttribute('onclick', `generatePdf(${roundId})`);
       document.getElementById('voteModal').classList.remove('hidden');

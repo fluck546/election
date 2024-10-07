@@ -47,10 +47,10 @@
   <body class="bg-gray-100">
     <div class="container mx-auto mt-10">
  
-      <div class="username">สวัสดึคุณ, {{ request.user.name }} {{ request.user.lastname }}!</div>
+      <div class="username">สวัสดึคุณ, {{ request.user.name }} {{ request.user.last_name }}!</div>
 
       <!-- Logout button -->
-      <form action="{% url 'logout' %}" method="post">
+      <form action="{% url 'logout' %}" method="post" onsubmit="handleVoteSubmit(this)">
         {% csrf_token %}
         <button
           class="logout bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded"
@@ -75,7 +75,7 @@
                 <h2 class="text-xl font-semibold mb-4">{{ round.name }}</h2>
 
                 <!-- Voting Form -->
-                <form method="POST" action="{% url 'index' %}">
+                <form method="POST" action="{% url 'index' %}" onsubmit="handleVoteSubmit(this)">
                   {% csrf_token %}
                   <input type="hidden" name="round_id" value="{{ round.id }}" />
                   <label for="candidate_{{ round.id }}" class="block text-gray-700">
@@ -89,6 +89,7 @@
                     onchange="displayCandidateDetails(this)"
                   >
                     <option value="">-- เลือกผู้สมัครเลือกตั้ง --</option>
+                    <option value="0">ไม่ประสงค์ลงคะแนน</option>
                     {% for candidate in round.candidates %}
                     <option
                       value="{{ candidate.id }}"
@@ -106,7 +107,7 @@
                   
                   <!-- Placeholder for displaying the selected candidate's details -->
                   <div id="candidateDetails_{{ round.id }}" class="p-4 bg-gray-100 rounded mt-4 hidden">
-                    <h3 class="text-lg font-semibold">รยละเอียดผูู้สมัคร:</h3>
+                    <h3 class="text-lg font-semibold">รายละเอียดผูู้สมัคร:</h3>
                     <p><strong>ชื่อ:</strong> <span id="candidateName_{{ round.id }}"></span></p>
                     <p><strong>นามสกุุล:</strong> <span id="candidateLastName_{{ round.id }}"></span></p>
                     <p><strong>สาขา:</strong> <span id="candidateBranch_{{ round.id }}"></span></p>
@@ -117,6 +118,7 @@
                   </div>
                   <button
                     type="submit"
+                    id="voteButton_{{ round.id }}"
                     class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
                   >
                     โหวต
@@ -136,13 +138,13 @@
         <div>
           <!-- Voted Information -->
           <div class="voted-info mb-6">
-            <h1 class="text-center text-xl font-bold mb-4">Your Voting Status</h1>
+            <h1 class="text-center text-xl font-bold mb-4">รอบที่คุณได้ลงคะเเนนไปแล้ว</h1>
             {% for round in rounds %}
               {% if round.user_has_voted %}
               <div class="bg-white shadow rounded-lg p-4 mb-4">
                 <p class="text-green-600 font-bold">
                   คุณได้โหวต {{ round.name }} ไปแล้วและ <br />
-                  ผลการเลือกตั้งจะถูกประกาศเวลาา {{ round.end_date }}.
+                  ผลการเลือกตั้งจะถูกประกาศเวลา {{ round.end_date }}.
                 </p>
                 <!-- Total Votes Submitted After Results Availability -->
                 <p class="text-gray-700 font-bold">
@@ -164,6 +166,7 @@
                 <a
                   href="{% url 'results' round.id %}"
                   class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded block w-full text-center"
+                  onclick="handleVoteSubmit(this)"
                   >ดูผล: {{ round.name }}</a
                 >
               </li>
@@ -216,14 +219,14 @@
         {% for message in messages %}
           {% if message.tags == 'success' %}
             Swal.fire({
-              title: 'Success!',
+              title: 'สำเร็จ!',
               text: "{{ message }}",
               icon: 'success',
               confirmButtonText: 'OK'
             });
           {% elif message.tags == 'error' %}
             Swal.fire({
-              title: 'Error!',
+              title: 'เกิดข้อผิดพลาด!',
               text: "{{ message }}",
               icon: 'error',
               confirmButtonText: 'OK'
@@ -231,5 +234,14 @@
           {% endif %}
         {% endfor %}
       {% endif %}
+    function handleVoteSubmit(form) {
+    // Disable the submit button and change its text
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.textContent = 'กำลังโหลด...';
+    
+    // Optional: Add a class to indicate loading (if needed for styling)
+    submitButton.classList.add('cursor-not-allowed', 'opacity-50');
+  }
   </script>
 </html>

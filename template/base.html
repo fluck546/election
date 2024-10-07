@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Admin Dashboard{% endblock %}</title>
+    <title>{% block title %}หน้าจัดการข้อมูล{% endblock %}</title>
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- SweetAlert2 JS -->
@@ -48,7 +48,9 @@
         <h2 class="text-2xl font-bold mb-6">หน้าแก้ไขข้อมูล</h2>
         <nav>
           <ul class="space-y-4">
+            {% if user.is_superuser %}
             <li><a href="{% url 'manage_users' %}" class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded">จัดการข้อมูลผู้ใช้</a></li>
+            {% endif %}
             <li><a href="{% url 'manage_rounds' %}" class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded">จัดการข้อมูลรอบการเลือกตั้ง</a></li>
             <li><a href="{% url 'manage_candidates' %}" class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded">จัดการข้อมูลผู้สมัคร</a></li>
             <li><a href="{% url 'manage_votes' %}" class="block py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded">ดูผลโหวต</a></li>
