@@ -155,8 +155,24 @@
 
   // Initialize DataTables
   $(document).ready(function () {
-    $(".dataTable").DataTable();
-  });
+    $(".dataTable").DataTable({
+      language: {
+        sProcessing: "กำลังประมวลผล...",
+        sLengthMenu: "แสดง _MENU_ รายการ",
+        sZeroRecords: "ไม่พบข้อมูล",
+        sInfo: "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+        sInfoEmpty: "แสดง 0 ถึง 0 จาก 0 รายการ",
+        sInfoFiltered: "(กรองจาก _MAX_ รายการทั้งหมด)",
+        sSearch: "ค้นหา:",
+        oPaginate: {
+          sFirst: "หน้าแรก",
+          sPrevious: "ก่อนหน้า",
+          sNext: "ถัดไป",
+          sLast: "หน้าสุดท้าย"
+        }
+      }
+    });
+    });
   function handleSubmit(form) {
     // Disable the submit button and change its text
     const submitButton = form.querySelector('button[type="submit"]');

@@ -5,23 +5,6 @@
 <div class="bg-white p-6 rounded-lg shadow-md">
   <h1 class="text-2xl font-bold mb-6">ดูผลโหวต</h1>
 
-  <!-- Search form -->
-  <form method="GET" action="{% url 'manage_votes' %}" class="mb-4">
-    <input
-      type="text"
-      name="search_query"
-      placeholder="Search candidates..."
-      value="{{ search_query }}"
-      class="bg-gray-100 border border-gray-300 rounded-md py-2 px-4"
-    />
-    <button
-      type="submit"
-      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-    >
-      ค้นหา
-    </button>
-  </form>
-
   <!-- List of rounds -->
   <div class="overflow-x-auto">
     <table class="dataTable min-w-full bg-white border border-gray-300 rounded-lg">
@@ -141,8 +124,24 @@
   }
 
   $(document).ready(function () {
-    $(".dataTable").DataTable();
-  });
+    $(".dataTable").DataTable({
+      language: {
+        sProcessing: "กำลังประมวลผล...",
+        sLengthMenu: "แสดง _MENU_ รายการ",
+        sZeroRecords: "ไม่พบข้อมูล",
+        sInfo: "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+        sInfoEmpty: "แสดง 0 ถึง 0 จาก 0 รายการ",
+        sInfoFiltered: "(กรองจาก _MAX_ รายการทั้งหมด)",
+        sSearch: "ค้นหา:",
+        oPaginate: {
+          sFirst: "หน้าแรก",
+          sPrevious: "ก่อนหน้า",
+          sNext: "ถัดไป",
+          sLast: "หน้าสุดท้าย"
+        }
+      }
+    });
+    });
 </script>
 
 {% endblock %}
