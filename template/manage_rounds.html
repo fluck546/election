@@ -10,7 +10,7 @@
   <!-- Add Round Modal -->
 <div id="addRoundModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden modal">
   <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg modal-content">
-    <h2 class="text-xl font-bold mb-4">เพิ่มผู้สมัครคนใหม่</h2>
+    <h2 class="text-xl font-bold mb-4">เพิ่มรอบการเลือกตั้ง</h2>
     <form method="POST" class="space-y-4" onsubmit="handleSubmit(this)">
       {% csrf_token %}
       
@@ -154,25 +154,8 @@
   }
 
   // Initialize DataTables
-  $(document).ready(function () {
-    $(".dataTable").DataTable({
-      language: {
-        sProcessing: "กำลังประมวลผล...",
-        sLengthMenu: "แสดง _MENU_ รายการ",
-        sZeroRecords: "ไม่พบข้อมูล",
-        sInfo: "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
-        sInfoEmpty: "แสดง 0 ถึง 0 จาก 0 รายการ",
-        sInfoFiltered: "(กรองจาก _MAX_ รายการทั้งหมด)",
-        sSearch: "ค้นหา:",
-        oPaginate: {
-          sFirst: "หน้าแรก",
-          sPrevious: "ก่อนหน้า",
-          sNext: "ถัดไป",
-          sLast: "หน้าสุดท้าย"
-        }
-      }
-    });
-    });
+  
+
   function handleSubmit(form) {
     // Disable the submit button and change its text
     const submitButton = form.querySelector('button[type="submit"]');

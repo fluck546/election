@@ -179,6 +179,8 @@
     </div>
 
     <script>
+      
+
       const video = document.getElementById("video");
       const canvas = document.getElementById("canvas");
       const context = canvas.getContext("2d");
@@ -214,7 +216,7 @@
       // Handle sending OTP
       document.getElementById("send-otp").addEventListener("click", function () {
         const email = document.getElementById("email").value;
-
+        
         if (!email) {
           Swal.fire("เกิดข้อผิดพลาด", "กรุณาใส่ email ก่อน", "error");
           return;
@@ -289,6 +291,7 @@
     // Optional: Add a class to indicate loading (if needed for styling)
       submitButton.classList.add('cursor-not-allowed', 'opacity-50');
      }
+     
     </script>
   </body>
 </html>

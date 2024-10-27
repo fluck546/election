@@ -21,7 +21,7 @@ SECRET_KEY = 'django-insecure-^mnwjvsq@@+6q70vvlr4k9%h_7dp*6emw4ajh^zl8i@*1iu2-)
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["rifile.trueddns.com"]
 
 INSTALLED_APPS = [
     'election_app',

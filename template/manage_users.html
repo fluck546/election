@@ -48,8 +48,8 @@
           <td class="py-3 px-6">{{ user.is_active|yesno:"ใช่,ไม่" }}</td> <!-- Display is_active -->
           <td class="py-3 px-6">{{ user.is_staff|yesno:"ใช่,ไม่" }}</td> <!-- Display is_staff -->
           <td class="py-3 px-6 text-center">
-            <button onclick="openEditUserModal('{{ user.id }}')" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded">Edit</button>
-            <button onclick="confirmDeleteUser('{{ user.id }}')" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded ml-2">Delete</button>
+            <button onclick="openEditUserModal('{{ user.id }}')" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded">แก้ไข</button>
+            <button onclick="confirmDeleteUser('{{ user.id }}')" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded ml-2">ลบ</button>
           </td>
         </tr>
         {% endfor %}
@@ -235,24 +235,6 @@ class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center 
     document.getElementById("editUserModal").classList.add("hidden");
     document.body.classList.remove("modal-open");
   }
-  $(document).ready(function () {
-    $(".dataTable").DataTable({
-      language: {
-        sProcessing: "กำลังประมวลผล...",
-        sLengthMenu: "แสดง _MENU_ รายการ",
-        sZeroRecords: "ไม่พบข้อมูล",
-        sInfo: "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
-        sInfoEmpty: "แสดง 0 ถึง 0 จาก 0 รายการ",
-        sInfoFiltered: "(กรองจาก _MAX_ รายการทั้งหมด)",
-        sSearch: "ค้นหา:",
-        oPaginate: {
-          sFirst: "หน้าแรก",
-          sPrevious: "ก่อนหน้า",
-          sNext: "ถัดไป",
-          sLast: "หน้าสุดท้าย"
-        }
-      }
-    });
-    });
+  
 </script>
 {% endblock %}

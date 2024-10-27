@@ -16,8 +16,16 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 
+import numpy as np
+
 def compare_faces(existing_face_encoding, new_face_encoding):
+    # Ensure the encodings are converted to numpy arrays
+    existing_face_encoding = np.array(existing_face_encoding)
+    new_face_encoding = np.array(new_face_encoding)
+    
+    # Compare faces
     return face_recognition.compare_faces([existing_face_encoding], new_face_encoding)[0]
+
 
 def staff_required(view_func):
     decorated_view_func = user_passes_test(lambda u: u.is_staff)(view_func)

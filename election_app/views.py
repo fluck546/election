@@ -552,7 +552,7 @@ def download_pdf_results(request, round_id):
 def index(request):
     user = request.user
     if user.is_staff:
-        return redirect("manage_users")
+        return redirect("manage_rounds")
 
     # Get current time and filter active and past election rounds
     now = timezone.now()
@@ -1115,6 +1115,7 @@ def get_user_data(request, user_id):
         "last_name": user.last_name,
         "branch": user.branch,
         "is_staff": user.is_staff,
+        "email":user.email
     }
     return JsonResponse(user_data)
 

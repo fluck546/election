@@ -78,9 +78,7 @@
 
     <!-- Initialize DataTables -->
     <script>
-      
-
-    $(document).ready(function () {
+      $(document).ready(function () {
     $(".dataTable").DataTable({
       language: {
         sProcessing: "กำลังประมวลผล...",
@@ -98,9 +96,11 @@
         }
       }
     });
-    });
+  });
+
+    
         
-      });
+      
       {% if messages %}
         {% for message in messages %}
           {% if message.tags == 'success' %}
